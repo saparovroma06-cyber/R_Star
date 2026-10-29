@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rahmat! | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark, #0c0e12);
+            color: var(--text-main, #f0f4f8);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+        .thank-you-container {
+            background-color: var(--bg-card, #141720);
+            border: 1px solid var(--border-color, #232836);
+            border-radius: 14px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        h1 {
+            color: var(--accent-green, #00c853);
+            font-size: 36px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        p {
+            font-size: 15px;
+            color: var(--text-muted, #8b99ac);
+            margin-bottom: 10px;
+        }
+        .delivery-info {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #1a1e27;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: var(--accent-orange, #ff5722);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 30px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .cta-button:hover {
+            background-color: #e64a19;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="thank-you-container">
+        <h1>Rahmat, buyurtmangiz qabul qilindi!</h1>
+        <p>Sizning buyurtmangiz muvaffaqiyatli rasmiylashtirildi. Tez orada siz bilan bog'lanamiz.</p>
+        
+        {% if delivery_method %}
+            <div class="delivery-info">
+                <p><b>Yetkazib berish usuli:</b> {{ delivery_method|capfirst }}</p>
+                {% if delivery_method == 'delivery' %}
+                    <p>Mahsulotlaringizni kuryer tez orada yetkazib beradi (taxminan 3 kun ichida).</p>
+                {% else %}
+                    <p>Buyurtmangizni yaqin orada o'zingiz olib ketishingiz mumkin.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <p>Cargo-14'ni tanlaganingiz uchun tashakkur!</p>
+        <a href="{% url 'cargo_14:home' %}" class="cta-button">Bosh sahifaga qaytish</a>
+    </div>
+</body>
+</html>

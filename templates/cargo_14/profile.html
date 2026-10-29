@@ -1,0 +1,154 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mening hisobim | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px;">
+        <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                <span style="color: var(--accent-orange);">Cargo-14</span>
+            </h1>
+        </a>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <a href="{% url 'cargo_14:add_product' %}" style="background: var(--accent-orange); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;">
+                ➕ Mahsulot qo'shish
+            </a>
+            <a href="{% url 'cargo_14:home' %}" style="color: var(--text-muted); text-decoration: none; font-size: 14px;">
+                ← Do'konga qaytish
+            </a>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="alert-messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 25px; margin-top: 10px;">
+        
+        <!-- Левая колонка: Профиль пользователя -->
+        <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; height: fit-content;">
+            
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
+                <div style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--accent-orange); overflow: hidden; margin-bottom: 12px; background: #1a1e27; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 87, 34, 0.4);">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <span style="font-size: 36px; font-weight: bold; color: #fff;">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </div>
+                <h3 style="margin: 0 0 4px 0; color: #fff;">{{ user.username }}</h3>
+                <span style="color: var(--accent-orange); font-size: 12px; font-weight: 600;">
+                    {% if user.is_staff %}⭐ Administrator{% else %}🎖️ Haridor / Sotuvchi{% endif %}
+                </span>
+                <span style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">
+                    A'zo bo'lgan: {{ user.date_joined|date:"d.m.Y" }}
+                </span>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+            <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 15px;">Profil ma'lumotlarini yangilash</h4>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Yangi rasm yuklash</label>
+                    {{ form.avatar }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Telefon raqam</label>
+                    {{ form.phone }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">O'zingiz haqingizda</label>
+                    {{ form.bio }}
+                </div>
+                <button type="submit" class="form-submit-btn" style="padding: 9px 15px; font-size: 13px;">
+                    Saqlash
+                </button>
+            </form>
+
+            <div style="margin-top: 25px; text-align: center;">
+                <a href="{% url 'cargo_14:logout' %}" style="color: #f44336; font-size: 13px; text-decoration: none; font-weight: 600;">
+                    🚪 Tizimdan chiqish
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Правая колонка: Мои товары -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #fff; font-size: 20px;">
+                    Mening mahsulotlarim ({{ my_products.count }})
+                </h2>
+                <a href="{% url 'cargo_14:add_product' %}" style="background-color: var(--accent-orange); color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold;">
+                    + Mahsulot qo'shish
+                </a>
+            </div>
+
+            {% if my_products %}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    {% for p in my_products %}
+                        <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: flex; gap: 20px; align-items: center;">
+                            <div style="width: 80px; height: 80px; background: #1a1e27; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                {% if p.images.all %}
+                                    <img src="{{ p.images.first.image.url }}" alt="{{ p.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                {% else %}
+                                    <span style="font-size: 24px;">🔫</span>
+                                {% endif %}
+                            </div>
+
+                            <div style="flex-grow: 1;">
+                                <div style="font-size: 12px; color: var(--accent-orange); text-transform: uppercase;">{{ p.category.name }}</div>
+                                <h4 style="margin: 4px 0 6px 0; color: #fff;">{{ p.name }}</h4>
+                                <div style="display: flex; gap: 12px; font-size: 12px; color: var(--text-muted);">
+                                    <span>🔋 {{ p.magazine_capacity }} ta orb</span>
+                                    <span>🎯 {{ p.get_shots_per_trigger_display }}</span>
+                                    <span>📦 Omborda: {{ p.count }} dona</span>
+                                </div>
+                            </div>
+
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div style="font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 6px;">
+                                    {{ p.sale_price|floatformat:0|intcomma }} UZS
+                                </div>
+                                {% if p.is_active %}
+                                    <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background: rgba(76, 175, 80, 0.2); color: #81c784; font-weight: bold;">
+                                        Faol
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background: rgba(244, 67, 54, 0.2); color: #e57373; font-weight: bold;">
+                                        Nofaol
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="background-color: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 12px; padding: 50px 20px; text-align: center; color: var(--text-muted);">
+                    <p style="font-size: 18px; margin-bottom: 8px;">Siz hali mahsulot qo'shmadingiz</p>
+                    <p style="font-size: 13px; margin-bottom: 20px;">O'zingizning strimer/airsoft yoki gel blaster mahsulotlaringizni qo'shing va soting!</p>
+                    <a href="{% url 'cargo_14:add_product' %}" style="background-color: var(--accent-orange); color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                        + Birinchi mahsulotni qo'shish
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

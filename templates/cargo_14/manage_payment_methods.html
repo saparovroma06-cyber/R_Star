@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To'lov usullarini boshqarish | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px;">
+        <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                <span style="color: var(--accent-orange);">Cargo-14</span>
+            </h1>
+        </a>
+        <a href="{% url 'cargo_14:profile' %}" style="color: var(--accent-orange); text-decoration: none; font-size: 14px; font-weight: 600;">
+            ← Profilga qaytish
+        </a>
+    </header>
+
+    <div class="auth-box">
+        <h2 style="margin: 0 0 10px 0; color: #fff; font-size: 22px; text-align: center;">To'lov usullarini boshqarish</h2>
+        <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-bottom: 25px;">
+            Bu yerda siz to'lov usullaringizni boshqarishingiz mumkin (imitatsiya).
+        </p>
+
+        {% if messages %}
+            <div class="alert-messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if has_saved_payment_method %}
+            <div style="background-color: #1a1e27; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                <p style="color: #81c784; font-weight: bold; margin-bottom: 10px;">✅ Saqlangan to'lov usuli mavjud.</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="remove_payment_method">
+                    <button type="submit" class="form-submit-btn" style="background-color: #f44336; margin-top: 10px;">To'lov usulini o'chirish</button>
+                </form>
+            </div>
+        {% else %}
+            <div style="background-color: #1a1e27; border: 1px dashed var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                <p style="color: var(--text-muted); margin-bottom: 10px;">❌ Saqlangan to'lov usuli mavjud emas.</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_payment_method">
+                    <button type="submit" class="form-submit-btn" style="margin-top: 10px;">Yangi to'lov usulini 'qo'shish'</button>
+                </form>
+            </div>
+        {% endif %}
+
+        <p style="text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-muted);">
+            <a href="{% url 'cargo_14:profile' %}" style="color: var(--accent-orange); text-decoration: underline;">Profilga qaytish</a>
+        </p>
+    </div>
+</body>
+</html>

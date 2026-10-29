@@ -1,0 +1,391 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="{{ lang|default:'uz' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lang == 'ru' %}Новости и обновления{% elif lang == 'en' %}News &amp; Updates{% else %}Yangiliklar va yangilanishlar{% endif %} | Cargo-14</title>
+    <meta name="description" content="Cargo-14 yangiliklar, chegirmalar va maxsus takliflar.">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            padding: 20px 0 40px;
+        }
+
+        .news-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-orange), #ff9800);
+        }
+
+        .news-card.hot::before {
+            background: linear-gradient(90deg, #f44336, #ff5722, #ff9800);
+            animation: hotGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes hotGlow {
+            from { opacity: 0.7; }
+            to { opacity: 1; box-shadow: 0 0 20px rgba(244, 67, 54, 0.4); }
+        }
+
+        .news-card.hot {
+            border-color: rgba(244, 67, 54, 0.4);
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-orange);
+            box-shadow: 0 8px 30px rgba(255, 87, 34, 0.15);
+        }
+
+        .news-urgency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .news-urgency-badge.hot {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.4);
+        }
+
+        .news-urgency-badge.normal {
+            background: rgba(255, 87, 34, 0.1);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 87, 34, 0.3);
+        }
+
+        .news-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 12px 0;
+            line-height: 1.35;
+        }
+
+        .news-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .promo-box {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 152, 0, 0.1));
+            border: 1px dashed var(--accent-orange);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: auto;
+        }
+
+        .promo-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .promo-code {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--accent-orange);
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .promo-code:hover { color: #ff9800; }
+
+        .promo-discount {
+            font-size: 14px;
+            color: var(--accent-green);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .promo-expires {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .copy-hint {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(60px);
+            background: var(--accent-green);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 999;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .copy-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .news-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        .page-hero {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+        .page-hero h2 {
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0 0 8px;
+            background: linear-gradient(135deg, #fff, var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-hero p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="header-logo">
+            <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+                <h1 style="margin: 0; color: #fff; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">
+                    <span style="color: var(--accent-orange);">Cargo-14</span> Tactical
+                </h1>
+            </a>
+        </div>
+
+        <nav class="header-nav">
+            <a href="{% url 'cargo_14:home' %}" class="nav-tab">
+                {% if lang == 'ru' %}🏠 Главная{% elif lang == 'en' %}🏠 Home{% else %}🏠 Bosh sahifa{% endif %}
+            </a>
+            <a href="{% url 'cargo_14:news' %}" class="nav-tab active">
+                {% if lang == 'ru' %}📢 Новости{% elif lang == 'en' %}📢 News{% else %}📢 Yangiliklar{% endif %}
+            </a>
+        </nav>
+
+        <div class="header-controls">
+            <a href="{% url 'cargo_14:favorites_list' %}" class="header-badge-btn">❤️ <span>{{ favorites_count }}</span></a>
+            <a href="{% url 'cargo_14:cart_view' %}" class="header-badge-btn">🛒 <span style="color: var(--accent-orange);">{{ cart.items_count|default:"0" }}</span></a>
+
+            {% if user.is_authenticated %}
+                {% if user_products_count > 0 %}
+                    <a href="{% url 'cargo_14:my_products' %}" class="header-badge-btn">📦 <span>{{ user_products_count }}</span></a>
+                {% endif %}
+                <div class="user-menu-container">
+                    <button class="avatar-circle-btn" onclick="toggleUserDropdown(event)" type="button" title="{{ user.username }}">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                        {% else %}
+                            <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-name">{{ user.username }}</div>
+                            <div class="dropdown-user-role">{% if user.is_staff %}⭐ Administrator{% else %}👤 Foydalanuvchi{% endif %}</div>
+                        </div>
+                        <a href="{% url 'cargo_14:profile' %}" class="dropdown-item"><span>👤</span> {% if lang == 'ru' %}Мой аккаунт{% elif lang == 'en' %}My account{% else %}Mening hisobim{% endif %}</a>
+                        <a href="{% url 'cargo_14:my_products' %}" class="dropdown-item"><span>📦</span> {% if lang == 'ru' %}Мои объявления{% elif lang == 'en' %}My listings{% else %}Mening e'lonlarim{% endif %}</a>
+                        <a href="{% url 'cargo_14:favorites_list' %}" class="dropdown-item"><span>❤️</span> {% if lang == 'ru' %}Избранное{% elif lang == 'en' %}Favorites{% else %}Saralangan{% endif %}</a>
+                        <a href="{% url 'cargo_14:add_product' %}" class="dropdown-item"><span>➕</span> {% if lang == 'ru' %}Добавить товар{% elif lang == 'en' %}Add product{% else %}Mahsulot qo'shish{% endif %}</a>
+                        {% if user.is_staff %}<a href="/admin/" class="dropdown-item" target="_blank"><span>⚙️</span> Django Admin</a>{% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'cargo_14:logout' %}" class="dropdown-item" style="color: #f44336;"><span>🚪</span> {% if lang == 'ru' %}Выход{% elif lang == 'en' %}Logout{% else %}Chiqish{% endif %}</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'account_login' %}" class="btn-ghost">{% if lang == 'ru' %}Войти{% elif lang == 'en' %}Login{% else %}Kirish{% endif %}</a>
+                <a href="{% url 'account_signup' %}" class="btn-orange">{% if lang == 'ru' %}Регистрация{% elif lang == 'en' %}Register{% else %}Ro'yxatdan o'tish{% endif %}</a>
+            {% endif %}
+
+            <!-- Language switcher -->
+            <div class="lang-switcher">
+                <a href="{% url 'cargo_14:set_language' %}?lang=uz" class="lang-btn {% if lang == 'uz' or not lang %}active{% endif %}">UZ</a>
+                <a href="{% url 'cargo_14:set_language' %}?lang=ru" class="lang-btn {% if lang == 'ru' %}active{% endif %}">RU</a>
+                <a href="{% url 'cargo_14:set_language' %}?lang=en" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
+            </div>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="alert-messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Hero -->
+    <div class="page-hero">
+        <h2>
+            {% if lang == 'ru' %}📢 Новости и обновления{% elif lang == 'en' %}📢 News &amp; Updates{% else %}📢 Yangiliklar va yangilanishlar{% endif %}
+        </h2>
+        <p>
+            {% if lang == 'ru' %}Акции, промокоды и последние события в Cargo-14{% elif lang == 'en' %}Promotions, promo codes and latest Cargo-14 events{% else %}Aktsiyalar, promokodlar va Cargo-14 so'nggi yangiliklari{% endif %}
+        </p>
+    </div>
+
+    <!-- News Grid -->
+    <main class="news-grid">
+        {% for item in news_items %}
+        <article class="news-card {% if item.urgency == 'hot' %}hot{% endif %}">
+
+            <!-- Urgency badge -->
+            <div class="news-urgency-badge {{ item.urgency }}">
+                {% if item.urgency == 'hot' %}
+                    🔥 {% if lang == 'ru' %}Горячее{% elif lang == 'en' %}Hot deal{% else %}Shoshilinch{% endif %}
+                {% else %}
+                    📌 {% if lang == 'ru' %}Объявление{% elif lang == 'en' %}Announcement{% else %}E'lon{% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Title -->
+            <h3 class="news-title">
+                {% if lang == 'ru' %}{{ item.title_ru }}
+                {% elif lang == 'en' %}{{ item.title_en }}
+                {% else %}{{ item.title_uz }}{% endif %}
+            </h3>
+
+            <!-- Body text -->
+            <p class="news-body">
+                {% if lang == 'ru' %}{{ item.body_ru }}
+                {% elif lang == 'en' %}{{ item.body_en }}
+                {% else %}{{ item.body_uz }}{% endif %}
+            </p>
+
+            <!-- Promo code block -->
+            {% if item.promocode and item.promocode.is_valid %}
+            <div class="promo-box">
+                <div class="promo-label">
+                    {% if lang == 'ru' %}🎁 Промокод{% elif lang == 'en' %}🎁 Promo code{% else %}🎁 Promokod{% endif %}
+                </div>
+                <div class="promo-code" onclick="copyPromo('{{ item.promocode.name }}')" title="{% if lang == 'ru' %}Нажмите, чтобы скопировать{% elif lang == 'en' %}Click to copy{% else %}Nusxa olish uchun bosing{% endif %}">
+                    {{ item.promocode.name }}
+                </div>
+                <div class="promo-discount">
+                    -{{ item.promocode.sale }}% {% if lang == 'ru' %}скидка{% elif lang == 'en' %}discount{% else %}chegirma{% endif %}
+                </div>
+                <div class="promo-expires">
+                    ⏱ {% if lang == 'ru' %}Действует до{% elif lang == 'en' %}Valid until{% else %}Amal qilish muddati{% endif %}:
+                    {{ item.promocode.live_time|date:"d.m.Y" }}
+                </div>
+                <div class="copy-hint">
+                    👆 {% if lang == 'ru' %}Нажмите на код, чтобы скопировать{% elif lang == 'en' %}Click the code to copy{% else %}Kodni nusxa olish uchun bosing{% endif %}
+                </div>
+            </div>
+            {% elif item.promocode %}
+            <div class="promo-box" style="opacity: 0.5;">
+                <div class="promo-label">{% if lang == 'ru' %}Промокод истёк{% elif lang == 'en' %}Promo expired{% else %}Promokod muddati o'tgan{% endif %}</div>
+                <div class="promo-code" style="text-decoration: line-through; cursor: default;">{{ item.promocode.name }}</div>
+            </div>
+            {% endif %}
+
+            <div class="news-date">
+                📅 {{ item.created_at|naturaltime }} &bull; {{ item.created_at|date:"d.m.Y" }}
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <p>📭 {% if lang == 'ru' %}Новостей пока нет{% elif lang == 'en' %}No news yet{% else %}Hozircha yangiliklar yo'q{% endif %}</p>
+        </div>
+        {% endfor %}
+    </main>
+
+    <!-- CTA -->
+    <div style="text-align: center; padding: 20px 0 40px;">
+        <a href="{% url 'cargo_14:home' %}" class="btn-orange" style="font-size: 15px; padding: 12px 30px;">
+            🛍 {% if lang == 'ru' %}Перейти в каталог{% elif lang == 'en' %}Go to catalog{% else %}Katalogga o'tish{% endif %}
+        </a>
+    </div>
+
+    <footer class="site-footer">
+        <p>© 2026 Cargo-14 Tactical Store</p>
+    </footer>
+
+    <!-- Copy toast -->
+    <div class="copy-toast" id="copyToast">
+        ✅ {% if lang == 'ru' %}Скопировано!{% elif lang == 'en' %}Copied!{% else %}Nusxalandi!{% endif %}
+    </div>
+
+    <script>
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) dropdown.classList.toggle('show');
+        }
+        document.addEventListener('click', function(e) {
+            const dd = document.getElementById('userDropdown');
+            const c = document.querySelector('.user-menu-container');
+            if (dd && c && !c.contains(e.target)) dd.classList.remove('show');
+        });
+
+        function copyPromo(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const toast = document.getElementById('copyToast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            }).catch(() => {
+                // fallback
+                const el = document.createElement('textarea');
+                el.value = code;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                const toast = document.getElementById('copyToast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            });
+        }
+    </script>
+</body>
+</html>

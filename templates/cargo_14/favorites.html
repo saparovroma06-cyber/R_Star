@@ -1,0 +1,80 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saralangan mahsulotlar | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px;">
+        <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                ❤️ Saralanganlar | <span style="color: var(--accent-orange);">Cargo-14</span>
+            </h1>
+        </a>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="{% url 'cargo_14:home' %}" style="color: var(--accent-orange); text-decoration: none; font-weight: bold; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; font-size: 13px;">
+                ← Do'konga qaytish
+            </a>
+            <div class="user-menu-container">
+                <a href="{% url 'cargo_14:profile' %}" class="avatar-circle-btn" title="{{ user.username }}">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                    {% else %}
+                        <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    </header>
+
+    {% if favorites %}
+        <div class="catalog-grid">
+            {% for fav in favorites %}
+                <article class="product-card" id="fav-card-{{ fav.product.id }}">
+                    <div class="product-image-wrapper">
+                        {% if fav.product.images.all %}
+                            <img src="{{ fav.product.images.first.image.url }}" alt="{{ fav.product.name }}">
+                        {% else %}
+                            <span style="font-size: 32px;">🔫</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">{{ fav.product.category.name }}</span>
+                        <a href="{% url 'cargo_14:product_detail' fav.product.id %}" style="text-decoration: none;">
+                            <h3 class="product-title">{{ fav.product.name }}</h3>
+                        </a>
+                        <div class="product-meta">
+                            <span class="meta-tag highlight">🔋 {{ fav.product.magazine_capacity }} ta</span>
+                            <span class="meta-tag">🎯 {{ fav.product.get_shots_per_trigger_display }}</span>
+                        </div>
+                        <div class="product-price-block">
+                            <span class="current-price">{{ fav.product.sale_price|floatformat:0|intcomma }} UZS</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: auto;">
+                            <a href="{% url 'cargo_14:product_detail' fav.product.id %}" class="btn-buy" style="flex: 2; text-decoration: none; padding: 8px 12px; font-size: 13px;">
+                                Batafsil
+                            </a>
+                            <a href="{% url 'cargo_14:toggle_favorite' fav.product.id %}" style="flex: 1; background: rgba(255, 64, 129, 0.15); border: 1px solid #ff4081; color: #ff4081; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px;" title="Olib tashlash">
+                                🗑️
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="background-color: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 12px; padding: 60px 20px; text-align: center; color: var(--text-muted); margin-top: 30px;">
+            <p style="font-size: 40px; margin: 0 0 10px 0;">❤️</p>
+            <h3 style="color: #fff; margin: 0 0 8px 0;">Saralangan mahsulotlar ro'yxati bo'sh</h3>
+            <p style="font-size: 14px; margin-bottom: 25px;">Yoqqan qurollar yoki jihozlarni yurakcha tugmasi orqali bu yerga saqlab qo'yishingiz mumkin.</p>
+            <a href="{% url 'cargo_14:home' %}" style="background-color: var(--accent-orange); color: #fff; text-decoration: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                Katalogni ko'rish
+            </a>
+        </div>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,122 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airsoft & Gel Blaster Store</title>
+    <!-- Подключаем файл стилей, который мы создали ранее -->
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <!-- Шапка сайта (Тактический Хедер) -->
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 30px;">
+        <div>
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">
+                <span style="color: var(--accent-orange);">Tactical</span> Loadout
+            </h1>
+            <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px;">Магазин приводов и экипировки 14+</p>
+        </div>
+        <!-- Иконка корзины (показывает общее количество из Django модели Cart) -->
+       {% if user.is_authenticated %}
+    <a href="{% url 'cargo_14:cart_view' %}" style="background-color: var(--bg-card); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); text-decoration: none; color: #fff;">
+        🛒 Сават: <span style="color: var(--accent-orange); font-weight: bold;">{{ cart.items_count|default:"0" }}</span>
+    </a>
+{% endif %}
+    </header>
+    
+    <!-- Сетка товаров (Динамический вывод из Django) -->
+    <main class="catalog-grid">
+        {% for product in products %}
+            {% if product.is_active %}
+                <article class="product-card">
+                    
+                    <!-- Плашки-бейджи (Проверка условий из Django моделей) -->
+                    {% if product.sale > 0 %}
+                        <span class="badge badge-sale">-{{ product.sale }}%</span>
+                    {% endif %}
+                    
+                    {% if product.is_recommended_pack %}
+                        <span class="badge badge-pack">Пак</span>
+                    {% elif product.is_new %}
+                        <span class="badge badge-new">Yangi</span>
+                    {% endif %}
+
+                    <!-- Изображение товара (Берем первое фото из связанной модели ProductImage) -->
+                    <div class="product-image-wrapper">
+                        {% if product.images.all %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <!-- Заглушка, если картинки нет -->
+                            <img src="https://placeholder.com" alt="No image">
+                        {% endif %}
+                    </div>
+
+                    <!-- Контентная часть карточки -->
+                    <div class="product-info">
+                        <span class="product-category">{{ product.category.name }}</span>
+                        <h3 class="product-title">{{ product.name }}</h3>
+
+                        <!-- Тактические мета-теги (Берем из добавленных нами полей) -->
+                        <div class="product-meta">
+                            <span class="meta-tag">⚡ {{ product.fps_velocity }} FPS</span>
+                            <span class="meta-tag">🔞 {{ product.safety_age }}+</span>
+                            <span class="meta-tag">📦 {{ product.info.power_source|default:"AEG" }}</span>
+                        </div>
+
+                        <!-- Краткое описание -->
+                        <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 15px 0; line-height: 1.4;">
+                            {{ product.about|truncatewords:12 }}
+                        </p>
+
+                        <!-- Цены -->
+                        <div class="product-price-block">
+                            {% if product.sale > 0 %}
+                                <span class="current-price">{{ product.sale_price|floatformat:0|intcomma }} UZS</span>
+                                <span class="old-price">{{ product.price|intcomma }} UZS</span>
+                            {% else %}
+                                <span class="current-price">{{ product.price|intcomma }} UZS</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Кнопка действия -->
+                        {% if product.count > 0 %}
+                            <button class="btn-buy" onclick="addToCart('{{ product.id }}')">Купить</button>
+                        {% else %}
+                            <button class="btn-buy" style="border-color: #333; color: #555; cursor: not-allowed;" disabled>Нет в наличии</button>
+                        {% endif %}
+                    </div>
+
+                </article>
+            {% endif %}
+        {% empty %}
+            <p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 40px;">Mahsulotlar topilmadi.</p>
+        {% endfor %}
+    </main>
+
+    <!-- Скрипт интеграции с Telegram WebApp -->
+    <script src="https://telegram.org"></script>
+    <script>
+        // Инициализируем Telegram WebApp, чтобы бот мог понимать действия на сайте
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Расширяем окно на весь экран телефона
+
+        function addToCart(productId) {
+            // Анимация кнопки или отправка запроса на бэкенд через fetch
+            console.log("Добавлен товар ID:", productId);
+            
+            // Если открыто внутри Telegram, можно вызвать легкую вибрацию телефона (haptic feedback)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+            
+            alert("Товар добавлен в корзину!");
+            
+            // Пример: Передача данных обратно в бот (если нужно сразу закрыть WebApp и оформить заказ)
+            // tg.sendData(JSON.stringify({action: "add_to_cart", product_id: productId}));
+        }
+    </script>
+</body>
+</html>

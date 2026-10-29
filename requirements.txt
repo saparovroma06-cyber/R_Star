@@ -1,0 +1,7 @@
+asgiref>=3.9.1
+django>=5.1
+pillow>=11.0
+python-dotenv>=1.0.1
+sqlparse>=0.5.0
+tzdata
+requests

@@ -1,0 +1,176 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mening e'lonlarim | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                📦 Mening e'lonlarim | <span style="color: var(--accent-orange);">Cargo-14</span>
+            </h1>
+        </a>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="{% url 'cargo_14:add_product' %}" style="background-color: var(--accent-orange); color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                <span>➕</span> Yangi e'lon qo'shish
+            </a>
+            <a href="{% url 'cargo_14:home' %}" style="color: var(--text-muted); text-decoration: none; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; font-size: 13px;">
+                ← Do'konga qaytish
+            </a>
+            <div class="user-menu-container">
+                <button class="avatar-circle-btn" onclick="toggleUserDropdown(event)" type="button" title="{{ user.username }}">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                    {% else %}
+                        <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-user-name">{{ user.username }}</div>
+                        <div class="dropdown-user-role">{% if user.is_staff %}⭐ Administrator{% else %}👤 Foydalanuvchi{% endif %}</div>
+                    </div>
+                    <a href="{% url 'cargo_14:profile' %}" class="dropdown-item">
+                        <span>👤</span> Mening hisobim
+                    </a>
+                    <a href="{% url 'cargo_14:my_products' %}" class="dropdown-item" style="color: var(--accent-orange);">
+                        <span>📦</span> Mening e'lonlarim ({{ user_products_count }})
+                    </a>
+                    <a href="{% url 'cargo_14:favorites_list' %}" class="dropdown-item">
+                        <span>❤️</span> Saralangan mahsulotlar
+                    </a>
+                    <a href="{% url 'cargo_14:add_product' %}" class="dropdown-item">
+                        <span>➕</span> Mahsulot qo'shish
+                    </a>
+                    {% if user.is_staff %}
+                        <a href="/admin/" class="dropdown-item">
+                            <span>⚙️</span> Django Admin
+                        </a>
+                    {% endif %}
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'cargo_14:logout' %}" class="dropdown-item" style="color: #f44336;">
+                        <span>🚪</span> Chiqish
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="alert-messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color: #fff; font-size: 20px;">
+            Siz qo'shgan mahsulotlar ro'yxati ({{ my_products.count }} ta)
+        </h2>
+    </div>
+
+    {% if my_products %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for p in my_products %}
+                <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                    
+                    <!-- Фото -->
+                    <div style="width: 100px; height: 100px; background: #12141a; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-color);">
+                        {% if p.images.all %}
+                            <img src="{{ p.images.first.image.url }}" alt="{{ p.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                        {% else %}
+                            <span style="font-size: 32px;">🔫</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Инфо -->
+                    <div style="flex-grow: 1; min-width: 240px;">
+                        <span style="font-size: 12px; color: var(--accent-orange); text-transform: uppercase; font-weight: bold;">
+                            {{ p.category.name }}
+                        </span>
+                        <h3 style="margin: 4px 0 8px 0; color: #fff; font-size: 18px;">
+                            {{ p.name }}
+                        </h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-muted);">
+                            <span class="meta-tag highlight">🔋 {{ p.magazine_capacity }} ta orb</span>
+                            <span class="meta-tag">🎯 {{ p.get_shots_per_trigger_display }}</span>
+                            <span class="meta-tag">📦 Omborda: {{ p.count }} dona</span>
+                        </div>
+                    </div>
+
+                    <!-- Цена и статус -->
+                    <div style="text-align: right; margin-right: 15px;">
+                        <div style="font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 6px;">
+                            {{ p.sale_price|floatformat:0|intcomma }} UZS
+                        </div>
+                        {% if p.sale > 0 %}
+                            <div style="font-size: 13px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 6px;">
+                                {{ p.price|intcomma }} UZS (-{{ p.sale }}%)
+                            </div>
+                        {% endif %}
+                        {% if p.is_active %}
+                            <span style="font-size: 11px; padding: 4px 10px; border-radius: 4px; background: rgba(76, 175, 80, 0.2); color: #81c784; font-weight: bold;">
+                                Faol (Katalogda ko'rinadi)
+                            </span>
+                        {% else %}
+                            <span style="font-size: 11px; padding: 4px 10px; border-radius: 4px; background: rgba(244, 67, 54, 0.2); color: #e57373; font-weight: bold;">
+                                Nofaol
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Действия -->
+                    <div style="display: flex; gap: 10px; flex-shrink: 0;">
+                        <a href="{% url 'cargo_14:product_detail' p.id %}" style="background-color: #242936; border: 1px solid var(--border-color); color: #fff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold;">
+                            Ko'rish
+                        </a>
+                        <a href="{% url 'cargo_14:edit_product_main_image' p.id %}" style="background-color: #242936; border: 1px solid var(--border-color); color: #fff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold;">
+                            🖼️ Rasmni tahrirlash
+                        </a>
+                        <a href="{% url 'cargo_14:delete_product' p.id %}" onclick="return confirm('Haqiqatan ham ushbu e\'lonni o\'chirmoqchimisiz?');" style="background-color: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.3); color: #f44336; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold;">
+                            🗑️ O'chirish
+                        </a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="background-color: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 12px; padding: 70px 20px; text-align: center; color: var(--text-muted);">
+            <p style="font-size: 40px; margin: 0 0 10px 0;">📦</p>
+            <h3 style="color: #fff; margin: 0 0 8px 0;">Siz hali hech qanday e'lon qo'shmadingiz</h3>
+            <p style="font-size: 14px; margin-bottom: 25px;">O'zingizning strimer/airsoft yoki gel blaster mahsulotlaringizni qo'shing va oson soting.</p>
+            <a href="{% url 'cargo_14:add_product' %}" style="background-color: var(--accent-orange); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                + Yangi e'lon qo'shish
+            </a>
+        </div>
+    {% endif %}
+
+    <script>
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const container = document.querySelector('.user-menu-container');
+            if (dropdown && container && !container.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

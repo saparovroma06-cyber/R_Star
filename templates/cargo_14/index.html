@@ -1,0 +1,586 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="{{ lang|default:'uz' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargo-14 | O'yinchoq va Aksessuarlar Do'koni</title>
+    <meta name="description" content="Cargo-14 — o'yinchoqlar, mashinalar, skeytlar, blasterlar va ko'p narsa. Online xarid qiling.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        (function() {
+            try {
+                var m = localStorage.getItem('cargo14_theme_mode');
+                if (m === 'light' || (!m && localStorage.getItem('cargo14_is_light') === '1')) {
+                    document.documentElement.classList.add('theme-light');
+                }
+            } catch(e) {}
+        })();
+    </script>
+</head>
+<body id="app-body" class="theme-dark">
+
+    <!-- ===== REJIM VA SOZLAMALAR BAR ===== -->
+    <div class="theme-bar container">
+        <div class="theme-bar-left">
+            <div class="theme-bar-group">
+                <span class="theme-bar-label">🌓 REJIM:</span>
+                <button class="theme-btn mode-btn active" id="mode-dark-btn" onclick="setMode('dark')" title="Tungi qorong'u rejim">
+                    🌙 Dark Mode
+                </button>
+                <button class="theme-btn mode-btn" id="mode-light-btn" onclick="setMode('light')" title="Kunduzgi yorug' rejim">
+                    ☀️ Light Mode
+                </button>
+            </div>
+        </div>
+
+        <div class="theme-bar-right">
+            <div class="theme-bar-group" id="neon-styles-group">
+                <span class="theme-bar-label">✨ NEON:</span>
+                <button class="theme-btn active" id="theme-dark" onclick="setStyle('dark')" title="1-Uslub: Olovli Neon">🔥 Olovli</button>
+                <button class="theme-btn" id="theme-neon" onclick="setStyle('neon')" title="2-Uslub: Kiber Zumrad">⚡ Zumrad</button>
+                <button class="theme-btn" id="theme-navy" onclick="setStyle('navy')" title="3-Uslub: Lazer Fiolet">🌊 Fiolet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="site-header container">
+        <!-- Logo -->
+        <div class="header-logo">
+            <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+                <h1 class="logo-title">
+                    <span style="color: var(--accent);">Cargo-14</span> Shop
+                </h1>
+            </a>
+            <p style="margin: 3px 0 0 0; color: var(--text-muted); font-size: 12px;">O'yinchoqlar, transport va aksessuarlar do'koni</p>
+        </div>
+
+        <!-- NAV TABS -->
+        <nav class="header-nav">
+            <a href="{% url 'cargo_14:home' %}" class="nav-tab {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                {% if lang == 'ru' %}🏠 Главная{% elif lang == 'en' %}🏠 Home{% else %}🏠 Bosh sahifa{% endif %}
+            </a>
+            <a href="{% url 'cargo_14:news' %}" class="nav-tab {% if request.resolver_match.url_name == 'news' %}active{% endif %}">
+                {% if lang == 'ru' %}📢 Новости{% elif lang == 'en' %}📢 News{% else %}📢 Yangiliklar{% endif %}
+            </a>
+            <a href="{% url 'cargo_14:support' %}" class="nav-tab">
+                {% if lang == 'ru' %}🛠️ Помощь{% elif lang == 'en' %}🛠️ Help{% else %}🛠️ Yordam{% endif %}
+            </a>
+        </nav>
+
+        <!-- RIGHT CONTROLS -->
+        <div class="header-controls">
+
+            <!-- Search — WIDE & ULTRA-BRIGHT (3 STYLES) -->
+            <div class="search-wrapper">
+                <form action="{% url 'cargo_14:home' %}" method="GET" class="search-form">
+                    <input type="text" name="q" id="search-q" value="{{ search_query|default:'' }}"
+                        placeholder="{% if lang == 'ru' %}Найти товар...{% elif lang == 'en' %}Search...{% else %}Mahsulot qidirish...{% endif %}"
+                        class="search-input">
+                    <button type="submit" class="search-btn" id="mainSearchBtn">
+                        ⚡ {% if lang == 'ru' %}НАЙТИ ТОВАР{% elif lang == 'en' %}SEARCH NOW{% else %}QIDIRISH{% endif %}
+                    </button>
+                </form>
+                <div class="search-style-switcher" title="3 xil yorqin uslub">
+                    <button type="button" class="style-dot dot-orange active" onclick="applyStyle('dark')" title="1-Uslub: Olovli Neon"></button>
+                    <button type="button" class="style-dot dot-lime" onclick="applyStyle('neon')" title="2-Uslub: Kiber Zumrad"></button>
+                    <button type="button" class="style-dot dot-purple" onclick="applyStyle('navy')" title="3-Uslub: Lazer Fiolet"></button>
+                </div>
+            </div>
+
+            <!-- Favorites -->
+            <a href="{% url 'cargo_14:favorites_list' %}" class="header-badge-btn" title="{% if lang == 'ru' %}Избранное{% elif lang == 'en' %}Favorites{% else %}Tanlangan{% endif %}">
+                ❤️ <span id="fav-counter">{{ favorites_count }}</span>
+            </a>
+
+            <!-- Cart -->
+            <a href="{% url 'cargo_14:cart_view' %}" class="header-badge-btn cart-btn" title="{% if lang == 'ru' %}Корзина{% elif lang == 'en' %}Cart{% else %}Savat{% endif %}">
+                🛒 <span id="cart-counter">{{ cart.items_count|default:"0" }}</span>
+            </a>
+
+            {% if user.is_authenticated %}
+                {% if user_products_count > 0 %}
+                    <a href="{% url 'cargo_14:my_products' %}" class="header-badge-btn" title="Mening e'lonlarim">
+                        📦 <span>{{ user_products_count }}</span>
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'cargo_14:add_product' %}" class="btn-outline-accent" title="E'lon berish">
+                    ➕ {% if lang == 'ru' %}Добавить{% elif lang == 'en' %}Add{% else %}Qo'shish{% endif %}
+                </a>
+
+                <!-- Avatar dropdown -->
+                <div class="user-menu-container">
+                    <button class="avatar-circle-btn" onclick="toggleUserDropdown(event)" type="button" title="{{ user.username }}">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                        {% else %}
+                            <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-name">{{ user.username }}</div>
+                            <div class="dropdown-user-role">{% if user.is_staff %}⭐ Administrator{% else %}👤 Foydalanuvchi{% endif %}</div>
+                        </div>
+                        <a href="{% url 'cargo_14:profile' %}" class="dropdown-item"><span>👤</span> {% if lang == 'ru' %}Мой аккаунт{% elif lang == 'en' %}My account{% else %}Mening hisobim{% endif %}</a>
+                        <a href="{% url 'cargo_14:my_products' %}" class="dropdown-item"><span>📦</span> {% if lang == 'ru' %}Мои объявления{% elif lang == 'en' %}My listings{% else %}Mening e'lonlarim{% endif %} ({{ user_products_count }})</a>
+                        <a href="{% url 'cargo_14:favorites_list' %}" class="dropdown-item"><span>❤️</span> {% if lang == 'ru' %}Избранное{% elif lang == 'en' %}Favorites{% else %}Saralangan{% endif %} ({{ favorites_count }})</a>
+                        <a href="{% url 'cargo_14:add_product' %}" class="dropdown-item"><span>➕</span> {% if lang == 'ru' %}Добавить товар{% elif lang == 'en' %}Add product{% else %}Mahsulot qo'shish{% endif %}</a>
+                        {% if user.is_staff %}
+                            <a href="/admin/" class="dropdown-item" target="_blank"><span>⚙️</span> Django Admin</a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'cargo_14:logout' %}" class="dropdown-item" style="color: #f44336;"><span>🚪</span> {% if lang == 'ru' %}Выход{% elif lang == 'en' %}Logout{% else %}Chiqish{% endif %}</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'account_login' %}" class="btn-ghost">
+                    {% if lang == 'ru' %}Войти{% elif lang == 'en' %}Login{% else %}Kirish{% endif %}
+                </a>
+                <a href="{% url 'account_signup' %}" class="btn-accent">
+                    {% if lang == 'ru' %}Регистрация{% elif lang == 'en' %}Register{% else %}Ro'yxatdan o'tish{% endif %}
+                </a>
+            {% endif %}
+
+            <!-- Language switcher -->
+            <div class="lang-switcher">
+                <a href="{% url 'cargo_14:set_language' %}?lang=uz" class="lang-btn {% if lang == 'uz' or not lang %}active{% endif %}">UZ</a>
+                <a href="{% url 'cargo_14:set_language' %}?lang=ru" class="lang-btn {% if lang == 'ru' %}active{% endif %}">RU</a>
+                <a href="{% url 'cargo_14:set_language' %}?lang=en" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
+            </div>
+
+            <!-- ===== QUICK DARK / LIGHT MODE TOGGLE ===== -->
+            <button class="header-mode-toggle" id="headerModeToggle" onclick="toggleMode()" title="Rejimni o'zgartirish (Dark / Light)">
+                <span class="mode-toggle-icon">🌙</span>
+                <span class="mode-toggle-text">Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="alert-messages container">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Category tabs / filters -->
+    {% if categories %}
+    <div class="category-strip container">
+        <a href="{% url 'cargo_14:home' %}" class="cat-pill {% if not selected_category %}active{% endif %}">
+            🎯 {% if lang == 'ru' %}Все{% elif lang == 'en' %}All{% else %}Barchasi{% endif %} ({{ paginator.count }})
+        </a>
+        {% for cat in categories %}
+            <a href="?category={{ cat.slug }}" class="cat-pill {% if selected_category == cat.slug %}active{% endif %}">
+                {{ cat.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Product grid -->
+    <main class="catalog-grid container">
+        {% for product in products %}
+            <article class="product-card">
+
+                <!-- Badges -->
+                {% if product.sale > 0 %}
+                    <span class="badge badge-sale">-{{ product.sale }}%</span>
+                {% endif %}
+                {% if product.is_recommended_pack %}
+                    <span class="badge badge-pack">{% if lang == 'ru' %}Комплект{% elif lang == 'en' %}Bundle{% else %}Komplekt{% endif %}</span>
+                {% elif product.is_new %}
+                    <span class="badge badge-new">{% if lang == 'ru' %}Новинка{% elif lang == 'en' %}New{% else %}Yangi{% endif %}</span>
+                {% endif %}
+                {% if product.has_shipping %}
+                    <span class="badge badge-shipping">🚚</span>
+                {% endif %}
+
+                <!-- Favorite btn -->
+                <button onclick="toggleCardFavorite('{{ product.id }}')" id="card-fav-{{ product.id }}"
+                    title="{% if lang == 'ru' %}В избранное{% elif lang == 'en' %}Add to favorites{% else %}Saralanganlarga{% endif %}"
+                    class="card-fav-btn">
+                    {% if product.id in user_favorites_ids %}❤️{% else %}🤍{% endif %}
+                </button>
+
+                <!-- Image → detail -->
+                <a href="{% url 'cargo_14:product_detail' product.id %}" class="product-img-link">
+                    <div class="product-image-wrapper">
+                        {% if product.images.all %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <span>
+                                    {% if product.category.name == 'Pistolety' %}🔫
+                                    {% elif product.category.name == 'Avtomaty' %}💥
+                                    {% elif product.category.name == 'Skeytlar' %}🛹
+                                    {% elif product.category.name == 'Moshinalar' %}🚗
+                                    {% elif product.category.name == 'Aksessuarlar' %}🎒
+                                    {% else %}✨{% endif %}
+                                </span>
+                                <span>{% if lang == 'ru' %}Фото нет{% elif lang == 'en' %}No image{% else %}Rasm yo'q{% endif %}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </a>
+
+                <!-- Info -->
+                <div class="product-info">
+                    <span class="product-category">{{ product.category.name }}</span>
+                    <a href="{% url 'cargo_14:product_detail' product.id %}" style="text-decoration:none;color:inherit;">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                    </a>
+
+                    <!-- Meta -->
+                    <div class="product-meta">
+                        {% if product.has_shipping %}
+                            <span class="meta-tag meta-shipping">🚚 {% if lang == 'ru' %}Доставка{% elif lang == 'en' %}Delivery{% else %}Yetkazib berish{% endif %}</span>
+                        {% else %}
+                            <span class="meta-tag">🏪 {% if lang == 'ru' %}Самовывоз{% elif lang == 'en' %}Pickup{% else %}O'zi oladi{% endif %}</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="product-excerpt">{{ product.about|truncatewords:10 }}</p>
+
+                    {% if product.user %}
+                        <div class="author-tag">👤 {{ product.user.username }}</div>
+                    {% endif %}
+
+                    <div class="product-price-block">
+                        {% if product.sale > 0 %}
+                            <span class="current-price">{{ product.sale_price|floatformat:0|intcomma }} UZS</span>
+                            <span class="old-price">{{ product.price|intcomma }} UZS</span>
+                        {% else %}
+                            <span class="current-price">{{ product.price|intcomma }} UZS</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-actions">
+                        {% if product.count > 0 %}
+                            <button class="btn-buy" id="btn-{{ product.id }}" onclick="addToCart('{{ product.id }}')">
+                                {% if lang == 'ru' %}🛒 В корзину{% elif lang == 'en' %}🛒 Add to cart{% else %}🛒 Savatga{% endif %}
+                            </button>
+                        {% else %}
+                            <button class="btn-buy btn-disabled" disabled>
+                                {% if lang == 'ru' %}Нет в наличии{% elif lang == 'en' %}Out of stock{% else %}Mavjud emas{% endif %}
+                            </button>
+                        {% endif %}
+                        <a href="{% url 'cargo_14:product_detail' product.id %}" class="btn-detail">
+                            {% if lang == 'ru' %}Подробнее{% elif lang == 'en' %}Details{% else %}Batafsil{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <p style="font-size:20px;margin-bottom:10px;">📦 {% if lang == 'ru' %}Товары не найдены{% elif lang == 'en' %}No products found{% else %}Mahsulotlar topilmadi{% endif %}</p>
+                <p style="font-size:14px;margin-bottom:20px;">{% if lang == 'ru' %}Зарегистрируйтесь и добавьте первый товар!{% elif lang == 'en' %}Register and add the first product!{% else %}Ro'yxatdan o'tib mahsulot qo'shing!{% endif %}</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cargo_14:add_product' %}" class="btn-accent">+ {% if lang == 'ru' %}Добавить товар{% elif lang == 'en' %}Add product{% else %}Yangi mahsulot{% endif %}</a>
+                {% else %}
+                    <a href="{% url 'account_signup' %}" class="btn-accent">{% if lang == 'ru' %}Регистрация{% elif lang == 'en' %}Register{% else %}Ro'yxatdan o'tish{% endif %}</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </main>
+
+    <!-- PAGINATION -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-wrap container">
+        {% if page_obj.has_previous %}
+            <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.previous_page_number }}" class="page-btn">‹ {% if lang == 'ru' %}Назад{% elif lang == 'en' %}Prev{% else %}Oldingi{% endif %}</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-btn page-btn-active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ num }}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <a href="?{% if search_query %}q={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ page_obj.next_page_number }}" class="page-btn">{% if lang == 'ru' %}Вперёд{% elif lang == 'en' %}Next{% else %}Keyingi{% endif %} ›</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Cargo-14 Shop &mdash; {% if lang == 'ru' %}Все права защищены{% elif lang == 'en' %}All rights reserved{% else %}Barcha huquqlar himoyalangan{% endif %}</p>
+        </div>
+    </footer>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+    // ===== THEME & MODE UNIFIED CONTROLLER =====
+    const STORAGE_MODE_KEY = 'cargo14_theme_mode'; // 'dark' | 'light'
+    const STORAGE_STYLE_KEY = 'cargo14_dark_style'; // 'dark' | 'neon' | 'navy'
+
+    function getSavedMode() {
+        try {
+            const m = localStorage.getItem(STORAGE_MODE_KEY);
+            if (m === 'light' || m === 'dark') return m;
+            return localStorage.getItem('cargo14_is_light') === '1' ? 'light' : 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    function getSavedStyle() {
+        try {
+            return localStorage.getItem(STORAGE_STYLE_KEY) || localStorage.getItem('cargo14_unified_style') || 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    function updateUI(mode, style) {
+        // 1. Top bar mode buttons
+        const btnDark = document.getElementById('mode-dark-btn');
+        const btnLight = document.getElementById('mode-light-btn');
+        if (btnDark) btnDark.classList.toggle('active', mode === 'dark');
+        if (btnLight) btnLight.classList.toggle('active', mode === 'light');
+
+        // 2. Header quick toggle button
+        const headerToggle = document.getElementById('headerModeToggle');
+        if (headerToggle) {
+            const icon = headerToggle.querySelector('.mode-toggle-icon');
+            const text = headerToggle.querySelector('.mode-toggle-text');
+            if (mode === 'light') {
+                if (icon) icon.textContent = '☀️';
+                if (text) text.textContent = 'Light';
+                headerToggle.title = 'Tungi rejimga o\'tish (Dark Mode)';
+            } else {
+                if (icon) icon.textContent = '🌙';
+                if (text) text.textContent = 'Dark';
+                headerToggle.title = 'Kunduzgi rejimga o\'tish (Light Mode)';
+            }
+        }
+
+        // 3. Top bar neon style buttons
+        const sDark = document.getElementById('theme-dark');
+        const sNeon = document.getElementById('theme-neon');
+        const sNavy = document.getElementById('theme-navy');
+        if (sDark) sDark.classList.toggle('active', style === 'dark');
+        if (sNeon) sNeon.classList.toggle('active', style === 'neon');
+        if (sNavy) sNavy.classList.toggle('active', style === 'navy');
+
+        // 4. Search dots
+        const dotOrange = document.querySelector('.dot-orange');
+        const dotLime = document.querySelector('.dot-lime');
+        const dotPurple = document.querySelector('.dot-purple');
+        if (dotOrange) dotOrange.classList.toggle('active', style === 'dark');
+        if (dotLime) dotLime.classList.toggle('active', style === 'neon');
+        if (dotPurple) dotPurple.classList.toggle('active', style === 'navy');
+
+        // 5. Search button style class
+        const searchBtn = document.getElementById('mainSearchBtn');
+        if (searchBtn) {
+            searchBtn.classList.remove('style-orange', 'style-lime', 'style-purple');
+            if (style === 'neon') searchBtn.classList.add('style-lime');
+            else if (style === 'navy') searchBtn.classList.add('style-purple');
+            else searchBtn.classList.add('style-orange');
+        }
+    }
+
+    // Set Mode: 'dark' or 'light'
+    function setMode(mode) {
+        const body = document.getElementById('app-body') || document.body;
+        const currentStyle = getSavedStyle();
+
+        if (mode === 'light') {
+            body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
+            body.classList.add('theme-light');
+            document.documentElement.classList.add('theme-light');
+            try {
+                localStorage.setItem(STORAGE_MODE_KEY, 'light');
+                localStorage.setItem('cargo14_is_light', '1');
+            } catch (e) {}
+        } else {
+            body.classList.remove('theme-light');
+            document.documentElement.classList.remove('theme-light');
+            body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
+            body.classList.add('theme-' + currentStyle);
+            try {
+                localStorage.setItem(STORAGE_MODE_KEY, 'dark');
+                localStorage.setItem('cargo14_is_light', '0');
+            } catch (e) {}
+        }
+
+        updateUI(mode, currentStyle);
+    }
+
+    // Toggle between dark and light
+    function toggleMode() {
+        const current = getSavedMode();
+        setMode(current === 'light' ? 'dark' : 'light');
+    }
+
+    // Set Neon Style: 'dark' | 'neon' | 'navy'
+    function setStyle(styleKey) {
+        const body = document.getElementById('app-body') || document.body;
+        let style = 'dark';
+        if (styleKey === 'neon' || styleKey === 'style-lime') style = 'neon';
+        else if (styleKey === 'navy' || styleKey === 'style-purple') style = 'navy';
+        else style = 'dark';
+
+        try {
+            localStorage.setItem(STORAGE_STYLE_KEY, style);
+            localStorage.setItem('cargo14_unified_style', style);
+        } catch (e) {}
+
+        const currentMode = getSavedMode();
+        if (currentMode !== 'light') {
+            body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
+            body.classList.add('theme-' + style);
+        }
+
+        updateUI(currentMode, style);
+    }
+
+    // Global aliases for existing buttons / scripts
+    window.setMode = setMode;
+    window.toggleMode = toggleMode;
+    window.toggleLightMode = toggleMode;
+    window.setStyle = setStyle;
+    window.applyStyle = setStyle;
+    window.setTheme = setStyle;
+    window.setSearchStyle = setStyle;
+
+    // Apply on load
+    (function initTheme() {
+        const savedMode = getSavedMode();
+        const savedStyle = getSavedStyle();
+        setMode(savedMode);
+        if (savedMode !== 'light') {
+            setStyle(savedStyle);
+        }
+    })();
+
+    // ===== ADD TO CART (TUZATILGAN) =====
+    async function addToCart(productId) {
+        const btn = document.getElementById('btn-' + productId);
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span style="opacity:.7">⏳ Qo\'shilmoqda...</span>';
+        }
+
+        try {
+            const response = await fetch('/cart/add/' + productId + '/?format=json', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            const data = await response.json();
+
+            if (data.success) {
+                // Update counter
+                const counter = document.getElementById('cart-counter');
+                if (counter) {
+                    counter.textContent = data.items_count;
+                    counter.classList.add('counter-bump');
+                    setTimeout(function() { counter.classList.remove('counter-bump'); }, 300);
+                }
+
+                if (typeof window.Telegram !== 'undefined' && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                }
+
+                if (btn) {
+                    btn.innerHTML = '✅ Savatga qo\'shildi!';
+                    btn.style.background = '#00c853';
+                    btn.style.borderColor = '#00c853';
+                    btn.style.color = '#fff';
+                    setTimeout(function() {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                    }, 1800);
+                }
+            } else {
+                throw new Error(data.message || 'Xato');
+            }
+        } catch (error) {
+            console.error('Cart error:', error);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '❌ Xato!';
+                setTimeout(function() { btn.innerHTML = originalText; }, 1500);
+            }
+        }
+    }
+
+    // ===== TOGGLE FAVORITE =====
+    async function toggleCardFavorite(productId) {
+        const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+        if (!isAuthenticated) {
+            window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+            return;
+        }
+        try {
+            const response = await fetch('/favorite/toggle/' + productId + '/?format=json', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            if (data.success) {
+                const btn = document.getElementById('card-fav-' + productId);
+                const favCounter = document.getElementById('fav-counter');
+                if (favCounter) favCounter.textContent = data.favorites_count;
+                if (btn) {
+                    btn.textContent = data.favorited ? '❤️' : '🤍';
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(() => btn.style.transform = 'scale(1)', 200);
+                }
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // ===== USER MENU DROPDOWN =====
+    function toggleUserDropdown(event) {
+        if (event) event.stopPropagation();
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('show');
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        const dropdown = document.getElementById('userDropdown');
+        const container = document.querySelector('.user-menu-container');
+        if (dropdown && container && !container.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // ===== ONBOARDING / TUTORIAL =====
+    {% if open_tutorial %}
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Foydalanuvchi birinchi marta kirdi, o'quv qo'llanmasini ishga tushirish.");
+        // Bu yerda siz intro.js yoki boshqa interaktiv tur kutubxonasini ishga tushirasiz
+        // Va foydalanuvchi o'quv qo'llanmasini tugatgandan so'ng,
+        // serverga so'rov yuborib, first_login_completed ni True qilib o'zgartirasiz.
+        // Misol uchun:
+        // fetch('/mark-tutorial-completed/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
+    });
+    {% endif %}
+    </script>
+</body>
+</html>

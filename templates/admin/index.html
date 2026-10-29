@@ -1,0 +1,195 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log humanize %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+    <!-- TACTICAL HERO HUD -->
+    <div class="hud-hero">
+        <div class="hud-hero-info">
+            <div class="hud-tag">⚡ CARGO-14 TACTICAL CONTROL</div>
+            <h1 class="hud-title">Boshqaruv Paneli</h1>
+            <p class="hud-subtitle">Xush kelibsiz, <strong>{{ user.username }}</strong>! Tizimdagi mahsulotlar, buyurtmalar va ruxsatnomalarni shu yerdan boshqaring.</p>
+        </div>
+        <div class="hud-hero-actions">
+            <a href="{% url 'admin:cargo_14_product_add' %}" class="hud-btn hud-btn-primary">
+                <span>➕</span> Mahsulot qo'shish
+            </a>
+            <a href="{% url 'admin:cargo_14_order_changelist' %}" class="hud-btn hud-btn-secondary">
+                <span>📦</span> Buyurtmalar
+            </a>
+            <a href="{% url 'cargo_14:presentation' %}" target="_blank" class="hud-btn hud-btn-accent">
+                <span>🎯</span> Prezentatsiya
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS KPI CARDS -->
+    <div class="hud-stats-grid">
+        <div class="hud-stat-card stat-products">
+            <div class="stat-icon">🔫</div>
+            <div class="stat-data">
+                <div class="stat-number">{{ dashboard_stats.products_count|default:"0"|intcomma }}</div>
+                <div class="stat-label">Jami Mahsulotlar</div>
+            </div>
+            <a href="{% url 'admin:cargo_14_product_changelist' %}" class="stat-link">Ro'yxatni ko'rish →</a>
+        </div>
+
+        <div class="hud-stat-card stat-orders">
+            <div class="stat-icon">📦</div>
+            <div class="stat-data">
+                <div class="stat-number">{{ dashboard_stats.orders_count|default:"0"|intcomma }}</div>
+                <div class="stat-label">Buyurtmalar</div>
+            </div>
+            <a href="{% url 'admin:cargo_14_order_changelist' %}" class="stat-link">
+                {% if dashboard_stats.new_orders_count %}
+                    <span class="stat-badge-new">{{ dashboard_stats.new_orders_count|intcomma }} ta yangi!</span>
+                {% else %}
+                    Barchasini ko'rish →
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="hud-stat-card stat-users">
+            <div class="stat-icon">👥</div>
+            <div class="stat-data">
+                <div class="stat-number">{{ dashboard_stats.users_count|default:"0"|intcomma }}</div>
+                <div class="stat-label">Foydalanuvchilar</div>
+            </div>
+            <a href="{% url 'admin:auth_user_changelist' %}" class="stat-link">Foydalanuvchilar →</a>
+        </div>
+
+        <div class="hud-stat-card stat-tickets">
+            <div class="stat-icon">🎫</div>
+            <div class="stat-data">
+                <div class="stat-number">{{ dashboard_stats.tickets_count|default:"0"|intcomma }}</div>
+                <div class="stat-label">Murojaatlar (Support)</div>
+            </div>
+            <a href="{% url 'admin:cargo_14_supportticket_changelist' %}" class="stat-link">
+                {% if dashboard_stats.open_tickets_count %}
+                    <span class="stat-badge-alert">{{ dashboard_stats.open_tickets_count|intcomma }} ta ochiq</span>
+                {% else %}
+                    Chiptalarni ko'rish →
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- APP LIST / MODULES -->
+    {% if app_list %}
+        <div class="hud-app-modules">
+            {% for app in app_list %}
+                <div class="hud-app-card module-{{ app.app_label }}">
+                    <div class="hud-app-header">
+                        <div class="hud-app-badge">{{ app.app_label|upper }}</div>
+                        <h2>
+                            <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">
+                                {{ app.name }}
+                            </a>
+                        </h2>
+                    </div>
+
+                    <div class="hud-models-list">
+                        {% for model in app.models %}
+                            <div class="hud-model-row model-{{ model.object_name|lower }}">
+                                <div class="hud-model-info">
+                                    <span class="hud-model-icon">
+                                        {% if model.object_name == 'Product' %}🔫
+                                        {% elif model.object_name == 'Category' %}📂
+                                        {% elif model.object_name == 'Order' %}📦
+                                        {% elif model.object_name == 'Cart' %}🛒
+                                        {% elif model.object_name == 'Promocode' %}🏷️
+                                        {% elif model.object_name == 'Comment' %}💬
+                                        {% elif model.object_name == 'Favorite' %}⭐
+                                        {% elif model.object_name == 'News' %}📰
+                                        {% elif model.object_name == 'SupportTicket' %}🎫
+                                        {% elif model.object_name == 'UserProfile' %}🪪
+                                        {% elif model.object_name == 'TelegramUserProfile' %}✈️
+                                        {% elif model.object_name == 'User' %}👤
+                                        {% elif model.object_name == 'Group' %}👥
+                                        {% elif model.object_name == 'Permission' %}🔑
+                                        {% elif model.object_name == 'Site' %}🌐
+                                        {% else %}📄{% endif %}
+                                    </span>
+                                    <div class="hud-model-name-wrap">
+                                        {% if model.admin_url %}
+                                            <a href="{{ model.admin_url }}" class="hud-model-title">{{ model.name }}</a>
+                                        {% else %}
+                                            <span class="hud-model-title">{{ model.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="hud-model-actions">
+                                    {% if model.add_url %}
+                                        <a href="{{ model.add_url }}" class="hud-action-add" title="{% blocktranslate with name=model.name %}Add {{ name }}{% endblocktranslate %}">
+                                            + Qo'shish
+                                        </a>
+                                    {% endif %}
+                                    {% if model.admin_url %}
+                                        <a href="{{ model.admin_url }}" class="hud-action-view" title="{% blocktranslate with name=model.name %}Change {{ name }}{% endblocktranslate %}">
+                                            Ochish →
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="hud-empty-state">
+            <p>{% translate "You don’t have permission to view or edit anything." %}</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <div class="recent-header">
+            <h3>⚡ Oxirgi Harakatlar</h3>
+            <span class="recent-badge">Tizim Jurnali</span>
+        </div>
+        {% get_admin_log 10 as admin_log for_user user %}
+        {% if not admin_log %}
+            <p class="recent-empty">Hozircha harakatlar mavjud emas</p>
+        {% else %}
+            <ul class="actionlist">
+            {% for entry in admin_log %}
+                <li class="action-item {% if entry.is_addition %}action-add{% elif entry.is_change %}action-change{% elif entry.is_deletion %}action-delete{% endif %}">
+                    <div class="action-type-pill">
+                        {% if entry.is_addition %}+ QO'SHILDI{% elif entry.is_change %}✎ TAHRIR{% elif entry.is_deletion %}✕ O'CHIRILDI{% else %}• HARAKAT{% endif %}
+                    </div>
+                    <div class="action-details">
+                        {% if entry.is_deletion or not entry.get_admin_url %}
+                            <span class="action-obj">{{ entry.object_repr }}</span>
+                        {% else %}
+                            <a href="{{ entry.get_admin_url }}" class="action-obj-link">{{ entry.object_repr }}</a>
+                        {% endif %}
+                        <div class="action-meta">
+                            {% if entry.content_type %}
+                                <span class="action-ct">{{ entry.content_type.name|capfirst }}</span>
+                            {% endif %}
+                            <span class="action-time" style="font-size: 11px; opacity: 0.7; margin-left: 8px;">{{ entry.action_time|naturaltime }}</span>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

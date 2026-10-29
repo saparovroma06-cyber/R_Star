@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asosiy rasmni tahrirlash | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark, #0c0e12);
+            color: var(--text-main, #f0f4f8);
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .auth-box { /* Используем существующий стиль для формы */
+            max-width: 480px;
+            margin: 40px auto;
+            background-color: var(--bg-card, #141720);
+            border: 1px solid var(--border-color, #232836);
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block; font-size: 13px; color: var(--text-muted, #8b99ac);
+            margin-bottom: 6px; font-weight: 500;
+        }
+        .form-input, .form-textarea {
+            width: 100%; box-sizing: border-box; background-color: #1a1e27;
+            border: 1.5px solid var(--border-color, #232836); border-radius: 12px;
+            color: #fff; padding: 10px 14px; font-size: 15px; font-family: inherit;
+            transition: all 0.25s ease; outline: none;
+        }
+        .form-input:focus, .form-textarea:focus {
+            border-color: var(--accent, #ff5722);
+            box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1), 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .form-input-file {
+            width: 100%; color: var(--text-muted); font-size: 13px;
+        }
+        .form-submit-btn {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            gap: 8px; width: 100%; padding: 14px 24px; background: linear-gradient(135deg, var(--accent, #ff5722) 0%, #ff6e40 100%);
+            border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700;
+            cursor: pointer; letter-spacing: 0.3px; transition: all 0.25s ease;
+            overflow: hidden; margin-top: 4px;
+        }
+        .form-submit-btn:hover {
+            background: linear-gradient(135deg, #e64a19 0%, #ff8f00 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(255, 87, 34, 0.4), 0 0 0 1px rgba(255, 87, 34, 0.2);
+        }
+        .product-image-preview {
+            margin-top: 15px;
+            max-width: 200px;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .current-image-info {
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .current-image-info img {
+            max-width: 150px;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-header">
+                <a href="{% url 'cargo_14:home' %}" class="auth-logo">
+                    <span class="auth-logo-icon">🎯</span>
+                    <span class="auth-logo-text">Cargo<span class="auth-logo-accent">-14</span></span>
+                </a>
+                <a href="{% url 'cargo_14:product_detail' product.id %}" class="auth-back-link">
+                    ← Mahsulotga qaytish
+                </a>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-card-glow"></div>
+                <div class="auth-card-inner">
+                    <div class="auth-title-section">
+                        <h1 class="auth-title">Asosiy rasmni tahrirlash</h1>
+                        <p class="auth-subtitle">Mahsulot uchun yangi asosiy rasmni yuklang</p>
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="auth-alert auth-alert-error">
+                            <span class="auth-alert-icon">⚠️</span>
+                            <div>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="auth-alert auth-alert-{{ message.tags }}">
+                                <span class="auth-alert-icon">
+                                    {% if message.tags == 'success' %}✅{% elif message.tags == 'info' %}ℹ️{% else %}⚠️{% endif %}
+                                </span>
+                                <div>{{ message }}</div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data" class="auth-form">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label class="form-label">Yangi rasm</label>
+                            {{ form.image }}
+                        </div>
+
+                        {% if main_image %}
+                            <div class="current-image-info">
+                                <p>Joriy asosiy rasm:</p>
+                                <img src="{{ main_image.image.url }}" alt="Joriy rasm" class="product-image-preview">
+                            </div>
+                        {% else %}
+                            <p class="current-image-info">Hozirda asosiy rasm mavjud emas.</p>
+                        {% endif %}
+
+                        <button type="submit" class="form-submit-btn">Rasmni saqlash</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

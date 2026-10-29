@@ -1,0 +1,71 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/login.css" %}">{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login-tactical{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="tactical-login-container">
+    <div class="tactical-login-box">
+        <div class="login-brand-header">
+            <div class="login-radar-glow"></div>
+            <div class="login-badge">⚡ CARGO-14</div>
+            <h1 class="login-title">COMMAND CENTER</h1>
+            <p class="login-subtitle">Xavfsiz tizimga kirish</p>
+        </div>
+
+        {% if form.errors and not form.non_field_errors %}
+            <p class="errornote">
+                {% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+            </p>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errornote">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form action="{{ app_path }}" method="post" id="login-form">
+            {% csrf_token %}
+            <div class="login-field-row">
+                <label for="id_username">Foydalanuvchi nomi</label>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+            <div class="login-field-row">
+                <label for="id_password">Parol</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+                <input type="hidden" name="next" value="{{ next }}">
+            </div>
+            
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+            <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">Parolni unutdingizmi?</a>
+            </div>
+            {% endif %}
+
+            <div class="submit-row">
+                <input type="submit" value="TIZIMGA KIRISH ➔" class="login-submit-btn">
+            </div>
+        </form>
+
+        <div class="login-footer-info">
+            <span>🛡️ CARGO-14 PROTOCOL v2.0 • MAXFIY</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

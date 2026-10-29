@@ -1,0 +1,321 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savat | Cargo 14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+    <header
+        style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px;">
+        <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+            <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                🛒 Savat | <span style="color: var(--accent-orange);">Cargo-14</span>
+            </h1>
+        </a>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="{% url 'cargo_14:home' %}"
+                style="color: var(--accent-orange); text-decoration: none; font-weight: bold; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; font-size: 13px;">
+                ← Do'konga qaytish
+            </a>
+            {% if user.is_authenticated %}
+            {% if user_products_count > 0 %}
+            <a href="{% url 'cargo_14:my_products' %}"
+                style="text-decoration: none; background: #242936; border: 1px solid var(--border-color); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                <span>📦</span> <span>Mening e'lonlarim</span>
+            </a>
+            {% endif %}
+
+            <div class="user-menu-container">
+                <button class="avatar-circle-btn" onclick="toggleUserDropdown(event)" type="button"
+                    title="{{ user.username }}">
+                    {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                    {% else %}
+                    <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-user-name">{{ user.username }}</div>
+                        <div class="dropdown-user-role">{% if user.is_staff %}⭐ Administrator{% else %}👤
+                            Foydalanuvchi{% endif %}</div>
+                    </div>
+                    <a href="{% url 'cargo_14:profile' %}" class="dropdown-item">
+                        <span>👤</span> Mening hisobim
+                    </a>
+                    <a href="{% url 'cargo_14:my_products' %}" class="dropdown-item">
+                        <span>📦</span> Mening e'lonlarim ({{ user_products_count }})
+                    </a>
+                    <a href="{% url 'cargo_14:favorites_list' %}" class="dropdown-item">
+                        <span>❤️</span> Saralangan mahsulotlar ({{ favorites_count }})
+                    </a>
+                    <a href="{% url 'cargo_14:add_product' %}" class="dropdown-item">
+                        <span>➕</span> Mahsulot qo'shish
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="/admin/" class="dropdown-item" target="_blank">
+                        <span>⚙️</span> Django Admin
+                    </a>
+                    {% endif %}
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'cargo_14:logout' %}" class="dropdown-item" style="color: #f44336;">
+                        <span>🚪</span> Chiqish
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if cart_items %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span style="color: var(--text-muted); font-size: 14px;">Savatdagi mahsulotlar: <strong>{{ items_count }}</strong> ta</span>
+        <a href="{% url 'cargo_14:clear_cart' %}" onclick="return confirm('Savatni tozalashni xohlaysizmi?');" style="color: #ff5252; text-decoration: none; font-size: 13px; font-weight: 600;">🗑️ Savatni tozalash</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px;">
+        {% for item in cart_items %}
+        <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                {% if item.product.images.all %}
+                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                {% else %}
+                    <div style="width: 70px; height: 70px; background: #1a1e28; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>
+                {% endif %}
+                <div>
+                    <a href="{% url 'cargo_14:product_detail' item.product.id %}" style="text-decoration: none; color: #fff;">
+                        <h4 style="margin: 0 0 6px 0; font-size: 16px;">{{ item.product.name }}</h4>
+                    </a>
+                    <div style="color: var(--text-muted); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap;">
+                        <span>Kategoriya: <strong style="color: #ccc;">{{ item.product.category.name }}</strong></span>
+                        <span>Narxi: <strong style="color: #fff;">{{ item.product.sale_price|floatformat:0|intcomma }} UZS</strong></span>
+                        <span>Soni: <strong style="color: var(--accent-orange);">{{ item.quantity }} dona</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="color: var(--accent-orange); font-size: 19px; font-weight: 800; text-align: right;">
+                    {{ item.total_price|floatformat:0|intcomma }} UZS
+                </div>
+                <a href="{% url 'cargo_14:remove_from_cart' item.product.id %}" 
+                   style="color: #ff5252; text-decoration: none; padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255, 82, 82, 0.3); font-size: 12px; font-weight: 600; transition: background 0.2s;"
+                   title="Savatdan o'chirish">
+                   ✕ O'chirish
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 15px;">Promokod (agar mavjud bo'lsa):</h4>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="promocode-input" placeholder="Promokodni kiriting" style="flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); background-color: #1a1e27; color: #fff; font-size: 14px;">
+            <button type="button" onclick="applyPromocode()" style="padding: 10px 20px; border-radius: 8px; background-color: var(--accent-orange); color: #fff; font-weight: bold; border: none; cursor: pointer;">Qo'llash</button>
+        </div>
+        <p id="promocode-message" style="font-size: 13px; margin-top: 10px;"></p>
+    </div>
+
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <span style="color: var(--text-muted); font-size: 14px;">Jami to'lov:</span>
+            <div style="color: #fff; font-size: 26px; font-weight: 800; margin-top: 4px;" id="total-price-display">{{ total_price|floatformat:0|intcomma }} UZS</div>
+        </div>
+        
+    </div>
+
+    <div style="background-color: #12141a; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 15px;">Yetkazib berish usulini tanlang:</h4>
+        <form id="checkout-form" method="POST" action="{% url 'cargo_14:checkout' %}">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+                    <input type="radio" name="delivery_method" value="pickup" checked onchange="updateTotalPrice()" style="width: 16px; height: 16px;">
+                    <span>O'zim olib ketaman (bepul)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+                    <input type="radio" name="delivery_method" value="delivery" onchange="updateTotalPrice()" style="width: 16px; height: 16px;">
+                    <span>Kuryer orqali yetkazib berish (<span id="delivery-price">15,000</span> UZS)</span>
+                </label>
+            </div>
+            <input type="hidden" name="total_amount" id="total-amount-input" value="{{ total_price|floatformat:0 }}">
+            <button type="button" onclick="handleCheckout()" class="btn-buy" style="max-width: 250px; padding: 14px 28px; font-size: 15px; font-weight: 700;">Buyurtma berish</button>
+        </form>
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); text-align: center; padding: 60px 20px; background-color: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color);">
+        <p style="font-size: 22px; margin-bottom: 10px;">🛒 Savat bo'sh</p>
+        <p style="font-size: 14px; margin-bottom: 25px;">Siz hali hech qanday mahsulot tanlamadingiz.</p>
+        <a href="{% url 'cargo_14:home' %}" style="background: var(--accent-orange); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
+            ← Do'konga o'tish
+        </a>
+    </div>
+    {% endif %}
+    <script>
+        const baseTotalPrice = parseFloat("{{ total_price|floatformat:0 }}");
+        const deliveryCost = 15000; // Примерная стоимость доставки
+
+        let appliedPromocode = null;
+        let promocodeDiscount = 0;
+
+        async function applyPromocode() {
+            const promocodeInput = document.getElementById('promocode-input');
+            const promocodeMessage = document.getElementById('promocode-message');
+            const promocode = promocodeInput.value.trim();
+
+            if (!promocode) {
+                // Если промокод пуст, просто сбрасываем примененный промокод
+                appliedPromocode = null;
+                promocodeDiscount = 0;
+                promocodeMessage.textContent = ""; // Убираем сообщение
+                updateTotalPrice();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/apply-promocode/?code=${promocode}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    appliedPromocode = data.promocode_name;
+                    promocodeDiscount = data.discount_percentage;
+                    promocodeMessage.textContent = `Promokod '${appliedPromocode}' qo'llanildi! Chegirma: ${promocodeDiscount}%`;
+                    promocodeMessage.style.color = '#81c784';
+                } else {
+                    appliedPromocode = null;
+                    promocodeDiscount = 0;
+                    promocodeMessage.textContent = data.message || "Noto'g'ri promokod yoki muddati o'tgan.";
+                    promocodeMessage.style.color = '#e57373';
+                }
+                updateTotalPrice(); // Обновляем общую сумму после применения промокода
+            } catch (error) {
+                console.error("Promocode error:", error);
+                promocodeMessage.textContent = "Promokodni qo'llashda xatolik yuz berdi.";
+                promocodeMessage.style.color = '#e57373';
+            }
+        }
+
+        function updateTotalPrice() {
+            const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
+            let currentTotalPrice = baseTotalPrice;
+
+            if (deliveryMethod === 'delivery') {
+                currentTotalPrice += deliveryCost;
+            }
+
+            // Применяем скидку от промокода
+            if (promocodeDiscount > 0) {
+                currentTotalPrice -= (currentTotalPrice * promocodeDiscount / 100);
+            }
+
+            document.getElementById('total-price-display').textContent = currentTotalPrice.toLocaleString() + ' UZS';
+            document.getElementById('total-amount-input').value = currentTotalPrice;
+
+            // Обновляем скрытые поля для промокода в форме заказа
+            document.getElementById('promocode-name-input').value = appliedPromocode || '';
+            document.getElementById('promocode-discount-input').value = promocodeDiscount;
+        }
+
+        // Добавляем скрытые поля в форму checkout-form
+        const checkoutForm = document.getElementById('checkout-form');
+        const promocodeNameInput = document.createElement('input');
+        promocodeNameInput.type = 'hidden';
+        promocodeNameInput.name = 'promocode_name';
+        promocodeNameInput.id = 'promocode-name-input';
+        checkoutForm.appendChild(promocodeNameInput);
+
+        const promocodeDiscountInput = document.createElement('input');
+        promocodeDiscountInput.type = 'hidden';
+        promocodeDiscountInput.name = 'promocode_discount';
+        promocodeDiscountInput.id = 'promocode-discount-input';
+        checkoutForm.appendChild(promocodeDiscountInput);
+
+        // Инициализация при загрузке страницы
+        window.onload = updateTotalPrice;
+
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('userDropdown');
+            const container = document.querySelector('.user-menu-container');
+            if (dropdown && container && !container.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // ===== CHECKOUT HANDLER =====
+        function handleCheckout() {
+            const isAuthenticated = ("{% if user.is_authenticated %}1{% endif %}" === "1");
+            if (!isAuthenticated) {
+                window.location.href = "{% url 'account_login' %}?next={% url 'cargo_14:cart_view' %}";
+                return;
+            }
+            updateTotalPrice();
+            const form = document.getElementById('checkout-form');
+            if (form) {
+                form.submit();
+            }
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmPurchase() {
+            handleCheckout();
+        }
+
+        function saveMockPaymentMethod() {
+            handleCheckout();
+        }
+    </script>
+
+    <!-- Модальное окно для ввода/подтверждения карты (имитация) -->
+    <div id="payment-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7);">
+        <div style="background-color: var(--bg-card); margin: 15% auto; padding: 30px; border: 1px solid var(--border-color); border-radius: 14px; width: 80%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative;">
+            <span onclick="closePaymentModal()" style="color: var(--text-muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h3 style="color: #fff; margin: 0 0 20px 0; font-size: 20px; text-align: center;">To'lov usulini tasdiqlash/qo'shish</h3>
+            
+            <div id="card-input-section">
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                    Xavfsizlik sababli, karta ma'lumotlari serverimizda saqlanmaydi. Bu faqatgina imitatsiya.
+                </p>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label class="form-label">Karta raqami (imitatsiya)</label>
+                    <input type="text" id="card-number-input" class="form-input" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" pattern="[0-9]{4}[0-9]{4}[0-9]{4}[0-9]{4}" title="16 raqamli karta raqami" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">CVV (imitatsiya)</label>
+                    <input type="text" id="card-cvv-input" class="form-input" placeholder="123" maxlength="3" pattern="[0-9]{3}" title="Kartaning orqa tomonidagi 3 raqam" required>
+                </div>
+                <button type="button" onclick="saveMockPaymentMethod()" class="form-submit-btn">Kartani 'saqlash' va tasdiqlash</button>
+            </div>
+
+            <div id="card-confirmation-section" style="display: none; text-align: center;">
+                <p style="color: #81c784; font-size: 16px; font-weight: bold; margin-bottom: 20px;">Saqlangan to'lov usuli mavjud.</p>
+                <button type="button" onclick="confirmPurchase()" class="form-submit-btn">Xaridni tasdiqlash</button>
+                <button type="button" onclick="closePaymentModal()" style="background-color: #555; margin-top: 10px;" class="form-submit-btn">Bekor qilish</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

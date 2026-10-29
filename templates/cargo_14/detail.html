@@ -1,0 +1,407 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} | Cargo-14</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- Хедер -->
+    <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <a href="{% url 'cargo_14:home' %}" style="text-decoration: none;">
+                <h1 style="margin: 0; color: #fff; font-size: 24px; text-transform: uppercase;">
+                    <span style="color: var(--accent-orange);">Cargo-14</span> Tactical
+                </h1>
+            </a>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <!-- Избранное -->
+            <a href="{% url 'cargo_14:favorites_list' %}" style="text-decoration: none; color: inherit;">
+                <div style="background-color: var(--bg-card); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    ❤️ <span style="font-size: 13px;">Saralanganlar:</span> <span id="fav-counter" style="color: #ff4081; font-weight: bold;">{{ favorites_count }}</span>
+                </div>
+            </a>
+
+            <!-- Корзина -->
+            <a href="{% url 'cargo_14:cart_view' %}" style="text-decoration: none; color: inherit;">
+                <div style="background-color: var(--bg-card); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    🛒 <span style="font-size: 13px;">Savat:</span> <span id="cart-counter" style="color: var(--accent-orange); font-weight: bold;">{{ cart.items_count|default:"0" }}</span>
+                </div>
+            </a>
+
+            <!-- Профиль -->
+            {% if user.is_authenticated %}
+                {% if user_products_count > 0 %}
+                    <a href="{% url 'cargo_14:my_products' %}" style="text-decoration: none; background: #242936; border: 1px solid var(--border-color); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                        <span>📦</span> <span>Mening e'lonlarim</span>
+                    </a>
+                {% endif %}
+
+                <div class="user-menu-container">
+                    <button class="avatar-circle-btn" onclick="toggleUserDropdown(event)" type="button" title="{{ user.username }}">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                        {% else %}
+                            <span class="avatar-placeholder">{{ user.username|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-name">{{ user.username }}</div>
+                            <div class="dropdown-user-role">{% if user.is_staff %}⭐ Administrator{% else %}👤 Foydalanuvchi{% endif %}</div>
+                        </div>
+                        <a href="{% url 'cargo_14:profile' %}" class="dropdown-item">
+                            <span>👤</span> Mening hisobim
+                        </a>
+                        <a href="{% url 'cargo_14:my_products' %}" class="dropdown-item">
+                            <span>📦</span> Mening e'lonlarim ({{ user_products_count }})
+                        </a>
+                        <a href="{% url 'cargo_14:favorites_list' %}" class="dropdown-item">
+                            <span>❤️</span> Saralangan mahsulotlar ({{ favorites_count }})
+                        </a>
+                        <a href="{% url 'cargo_14:add_product' %}" class="dropdown-item">
+                            <span>➕</span> Mahsulot qo'shish
+                        </a>
+                        {% if user.is_staff %}
+                            <a href="/admin/" class="dropdown-item" target="_blank">
+                                <span>⚙️</span> Django Admin
+                            </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'cargo_14:logout' %}" class="dropdown-item" style="color: #f44336;">
+                            <span>🚪</span> Chiqish
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'account_login' %}" style="background-color: var(--accent-orange); color: #fff; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                    Kirish
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Сообщения -->
+    {% if messages %}
+    <div class="alert-messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Навигация хлебных крошек -->
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+        <a href="{% url 'cargo_14:home' %}" style="color: var(--accent-orange); text-decoration: none;">Bosh sahifa</a>
+        <span>/</span>
+        <a href="{% url 'cargo_14:home' %}?category={{ product.category.slug }}" style="color: var(--text-muted); text-decoration: none;">{{ product.category.name }}</a>
+        <span>/</span>
+        <span style="color: #fff;">{{ product.name }}</span>
+    </div>
+
+    <!-- Основной блок товара: фото и данные -->
+    <div style="display: grid; grid-template-columns: minmax(320px, 480px) 1fr; gap: 35px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 30px; margin-bottom: 35px;">
+        
+        <!-- Галерея фото -->
+        <div>
+            <div style="width: 100%; height: 380px; background-color: #12141a; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-color); position: relative;">
+                {% if product.sale > 0 %}
+                    <span class="badge badge-sale">-{{ product.sale }}%</span>
+                {% endif %}
+                {% if product.is_recommended_pack %}
+                    <span class="badge badge-pack">Komplekt</span>
+                {% endif %}
+
+                {% if product.images.all %}
+                    <img id="main-product-img" src="{{ product.images.first.image.url }}" alt="{{ product.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                {% else %}
+                    <div style="text-align: center; color: var(--text-muted);">
+                        <span style="font-size: 60px;">
+                            {% if product.category.name == 'Pistolety' %}🔫
+                            {% elif product.category.name == 'Avtomaty' %}💥
+                            {% elif product.category.name == 'Skeytlar' %}🛹
+                            {% elif product.category.name == 'Moshinalar' %}🚗
+                            {% elif product.category.name == 'Aksessuarlar' %}🎒
+                            {% else %}✨{% endif %}
+                        </span>
+                        <p style="margin: 8px 0 0 0;">Rasm yuklanmagan</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Дополнительные миниатюры -->
+            {% if product.images.count > 1 %}
+                <div style="display: flex; gap: 10px; margin-top: 15px; overflow-x: auto;">
+                    {% for img in product.images.all %}
+                        <div onclick="document.getElementById('main-product-img').src='{{ img.image.url }}'" style="width: 70px; height: 70px; background: #12141a; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img src="{{ img.image.url }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Информация о товаре -->
+        <div style="display: flex; flex-direction: column;">
+            <div style="font-size: 13px; color: var(--accent-orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+                {{ product.category.name }}
+            </div>
+            <h1 style="font-size: 26px; color: #fff; margin: 0 0 10px 0;">
+                {{ product.name }}
+            </h1>
+
+            <!-- Отзывы и наличие -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <span style="color: var(--text-muted); font-size: 13px;">
+                    💬 {{ product.comments_count }} ta sharh
+                </span>
+                {% if product.count > 0 %}
+                    <span style="color: #81c784; font-size: 13px; font-weight: bold; background: rgba(76, 175, 80, 0.1); padding: 3px 8px; border-radius: 4px;">
+                        Omborda mavjud ({{ product.count }} dona)
+                    </span>
+                {% else %}
+                    <span style="color: #e57373; font-size: 13px; font-weight: bold; background: rgba(244, 67, 54, 0.1); padding: 3px 8px; border-radius: 4px;">
+                        Mavjud emas
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Цены -->
+            <div style="margin-bottom: 25px; display: flex; align-items: baseline; gap: 15px;">
+                {% if product.sale > 0 %}
+                    <span style="font-size: 32px; font-weight: bold; color: #fff;">{{ product.sale_price|floatformat:0|intcomma }} UZS</span>
+                    <span style="font-size: 18px; color: var(--text-muted); text-decoration: line-through;">{{ product.price|intcomma }} UZS</span>
+                {% else %}
+                    <span style="font-size: 32px; font-weight: bold; color: #fff;">{{ product.price|intcomma }} UZS</span>
+                {% endif %}
+            </div>
+
+            <!-- Тактические параметры (Магазин, Спуск, Возраст) -->
+            <div style="background-color: #12141a; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 12px 0; color: #fff; font-size: 14px; text-transform: uppercase;">
+                    🎯 Qurol spetsifikatsiyalari
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                    <div style="color: var(--text-muted);">
+                        🔋 1 ta magazin sig'imi: <strong style="color: #fff;">{{ product.magazine_capacity }} ta orb</strong>
+                    </div>
+                    <div style="color: var(--text-muted);">
+                        🎯 1 marta bosishda: <strong style="color: var(--accent-orange);">{{ product.get_shots_per_trigger_display }}</strong>
+                    </div>
+                    <div style="color: var(--text-muted);">
+                        🔞 Minimal yosh: <strong style="color: #fff;">{{ product.safety_age }}+ yosh</strong>
+                    </div>
+                    <div style="color: var(--text-muted);">
+                        ⚙️ Energiya manbai: <strong style="color: #fff;">{{ product.info.power_source|default:"Elektr (AEG)" }}</strong>
+                    </div>
+                    <div style="color: var(--text-muted);">
+                        🔘 Kalibr: <strong style="color: #fff;">{{ product.info.caliber|default:"7-8mm Gel / 6mm BB" }}</strong>
+                    </div>
+                    <div style="color: var(--text-muted);">
+                        🛡️ Material: <strong style="color: #fff;">{{ product.info.material|default:"ABS Plastic" }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки действий: Корзина и Избранное -->
+            <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                {% if product.count > 0 %}
+                    <button class="btn-buy" id="btn-{{ product.id }}" onclick="addToCart('{{ product.id }}')" style="flex: 2; padding: 14px 20px; font-size: 15px;">
+                        🛒 Savatga qo'shish
+                    </button>
+                {% else %}
+                    <button class="btn-buy" style="flex: 2; border-color: #333; color: #555; cursor: not-allowed;" disabled>
+                        Mavjud emas
+                    </button>
+                {% endif %}
+
+                <!-- Кнопка Избранное -->
+                {% if is_favorite %}
+                    <button id="fav-btn" onclick="toggleFavorite('{{ product.id }}')" style="flex: 1; background: #ff4081; border: 2px solid #ff4081; color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+                        <span id="fav-icon">❤️</span>
+                        <span id="fav-text">Saralangan</span>
+                    </button>
+                {% else %}
+                    <button id="fav-btn" onclick="toggleFavorite('{{ product.id }}')" style="flex: 1; background: transparent; border: 2px solid #ff4081; color: #ff4081; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+                        <span id="fav-icon">🤍</span>
+                        <span id="fav-text">Tanlanganlarga</span>
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Продавец / Автор -->
+            {% if product.user %}
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background-color: #1a1e27; border-radius: 8px; border: 1px solid var(--border-color); margin-top: auto;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #242936; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--accent-orange);">
+                        {% if product.user.profile.avatar %}
+                            <img src="{{ product.user.profile.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {{ product.user.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: #fff; font-weight: 600;">Sotuvchi: {{ product.user.username }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Saytda {{ product.user.date_joined|date:"d.m.Y" }} dan beri</div>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Описание товара -->
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 25px; margin-bottom: 35px;">
+        <h3 style="color: #fff; margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            📝 Mahsulot haqida batafsil ma'lumot
+        </h3>
+        <p style="color: var(--text-main); font-size: 14px; line-height: 1.7; margin: 0; white-space: pre-line;">
+            {{ product.about }}
+        </p>
+    </div>
+
+
+
+    <!-- ПОХОЖИЕ ТОВАРЫ -->
+    {% if similar_products %}
+        <div style="margin-bottom: 40px;">
+            <h3 style="color: #fff; margin: 0 0 20px 0; font-size: 20px;">
+                🔥 O'xshash taktik mahsulotlar
+            </h3>
+            <div class="catalog-grid">
+                {% for sp in similar_products %}
+                    <article class="product-card">
+                        <div class="product-image-wrapper">
+                            {% if sp.images.all %}
+                                <img src="{{ sp.images.first.image.url }}" alt="{{ sp.name }}">
+                            {% else %}
+                                <span style="font-size: 32px;">🔫</span>
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <span class="product-category">{{ sp.category.name }}</span>
+                            <a href="{% url 'cargo_14:product_detail' sp.id %}" style="text-decoration: none;">
+                                <h3 class="product-title" style="font-size: 16px;">{{ sp.name }}</h3>
+                            </a>
+                            <div class="product-meta">
+                                <span class="meta-tag highlight">🔋 {{ sp.magazine_capacity }} ta</span>
+                                <span class="meta-tag">🎯 {{ sp.get_shots_per_trigger_display }}</span>
+                            </div>
+                            <div class="product-price-block">
+                                <span class="current-price">{{ sp.sale_price|floatformat:0|intcomma }} UZS</span>
+                            </div>
+                            <a href="{% url 'cargo_14:product_detail' sp.id %}" class="btn-buy" style="text-decoration: none;">
+                                Ko'rish
+                            </a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- JS: Корзина и Избранное -->
+    <script>
+        async function addToCart(productId) {
+            const btn = document.getElementById('btn-' + productId);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Qo\'shilmoqda...';
+            }
+
+            try {
+                const response = await fetch(`/cart/add/${productId}/?format=json`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const counter = document.getElementById('cart-counter');
+                    if (counter) counter.textContent = data.items_count;
+
+                    if (btn) {
+                        btn.textContent = 'Qo\'shildi ✓';
+                        btn.style.backgroundColor = 'var(--accent-green)';
+                        btn.style.borderColor = 'var(--accent-green)';
+                        btn.style.color = '#fff';
+                        setTimeout(() => {
+                            btn.disabled = false;
+                            btn.textContent = '🛒 Savatga qo\'shish';
+                            btn.style.backgroundColor = '';
+                            btn.style.borderColor = '';
+                            btn.style.color = '';
+                        }, 1200);
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🛒 Savatga qo\'shish';
+                }
+            }
+        }
+
+        async function toggleFavorite(productId) {
+            const isAuthenticated = ("{% if user.is_authenticated %}1{% endif %}" === "1");
+            if (!isAuthenticated) {
+                window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/favorite/toggle/${productId}/?format=json`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const favBtn = document.getElementById('fav-btn');
+                    const favIcon = document.getElementById('fav-icon');
+                    const favText = document.getElementById('fav-text');
+                    const favCounter = document.getElementById('fav-counter');
+
+                    if (favCounter) favCounter.textContent = data.favorites_count;
+
+                    if (data.favorited) {
+                        favBtn.style.backgroundColor = '#ff4081';
+                        favBtn.style.color = '#fff';
+                        favIcon.textContent = '❤️';
+                        favText.textContent = 'Saralangan';
+                    } else {
+                        favBtn.style.backgroundColor = 'transparent';
+                        favBtn.style.color = '#ff4081';
+                        favIcon.textContent = '🤍';
+                        favText.textContent = 'Tanlanganlarga';
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const container = document.querySelector('.user-menu-container');
+            if (dropdown && container && !container.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

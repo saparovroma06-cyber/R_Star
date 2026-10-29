@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargo-14 Taqdimoti - Taktik Mahsulotlar Do'koni</title>
+    <meta name="description" content="Cargo-14 saytining taqdimoti: airsoft, gel blaster va taktik jihozlar uchun zamonaviy online do'kon.">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark, #0c0e12);
+            color: var(--text-main, #f0f4f8);
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .presentation-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: var(--bg-card, #141720);
+            border: 1px solid var(--border-color, #232836);
+            border-radius: 14px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        h1 {
+            color: var(--accent-orange, #ff5722);
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: var(--accent-green, #00c853);
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 15px;
+            color: var(--text-muted, #8b99ac);
+            margin-bottom: 10px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-left: 20px;
+        }
+        ul li {
+            margin-bottom: 8px;
+            color: var(--text-main);
+            position: relative;
+            padding-left: 25px;
+        }
+        ul li::before {
+            content: '✔️';
+            position: absolute;
+            left: 0;
+            color: var(--accent-green, #00c853);
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: var(--accent-orange, #ff5722);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 30px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .cta-button:hover {
+            background-color: #e64a19;
+            transform: translateY(-2px);
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 13px;
+            color: var(--text-muted, #8b99ac);
+        }
+        .logo-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo-header h1 {
+            font-size: 48px;
+            margin: 0;
+        }
+        .logo-header .accent {
+            color: var(--accent-orange, #ff5722);
+        }
+        .logo-header p {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="logo-header">
+            <h1><span class="accent">Cargo-14</span> Shop</h1>
+            <p>Taktik jihozlar va o'yinchoqlar online do'koni</p>
+        </div>
+
+        <h1>Sayt Taqdimoti</h1>
+
+        <p>Hurmatli mehmonlar va hamkorlar!</p>
+        <p>Sizlarga <strong>Cargo-14</strong> loyihasini taqdim etishdan mamnunmiz — bu airsoft, gel blaster va taktik jihozlar uchun zamonaviy va funksional online do'kon.</p>
+        <p>Bizning maqsadimiz — foydalanuvchilarimizga qulay va xavfsiz xarid qilish tajribasini taqdim etish.</p>
+
+        <h2>Asosiy funksiyalar:</h2>
+
+        <h3>Mahsulot katalogi va tafsilotlari</h3>
+        <ul>
+            <li>Kategoriyalar bo'yicha qulay qidiruv va filtrlash.</li>
+            <li>Har bir mahsulot uchun batafsil tavsif, narxlar va chegirmalar.</li>
+            <li>Rasm yuklanmagan mahsulotlar uchun kategoriyaga mos keluvchi maxsus emojilar.</li>
+        </ul>
+
+        <h3>Xarid savati</h3>
+        <ul>
+            <li>Mahsulotlarni savatga qo'shish va olib tashlash.</li>
+            <li>Savatdagi mahsulotlar soni va umumiy narxni real vaqtda ko'rish.</li>
+        </ul>
+
+        <h3>Buyurtma va yetkazib berish</h3>
+        <ul>
+            <li>Buyurtma berishda yetkazib berish usulini tanlash (o'zi olib ketish yoki kuryer orqali yetkazish).</li>
+            <li>Yetkazib berish narxi tanlangan usulga qarab avtomatik hisoblanadi.</li>
+            <li>Promokodlarni qo'llash imkoniyati bilan chegirmalardan foydalanish.</li>
+        </ul>
+
+        <h3>Foydalanuvchi akkauntlari</h3>
+        <ul>
+            <li>Oddiy ro'yxatdan o'tish va tizimga kirish.</li>
+            <li>Google va GitHub orqali tez va avtomatik ro'yxatdan o'tish/tizimga kirish.</li>
+            <li>Shaxsiy profilni boshqarish, ma'lumotlarni yangilash.</li>
+            <li>Saqlangan to'lov usullarini boshqarish (xavfsiz imitatsiya).</li>
+        </ul>
+
+        <h3>Qo'llab-quvvatlash tizimi</h3>
+        <ul>
+            <li>Foydalanuvchilarning murojaatlari va shikoyatlarini qabul qilish formasi.</li>
+            <li>Barcha murojaatlar avtomatik ravishda Telegram-botga yuboriladi.</li>
+        </ul>
+
+        <h3>Telegram-bot integratsiyasi</h3>
+        <ul>
+            <li>Sayt ishga tushganda avtomatik xabarnoma.</li>
+            <li>Yangi foydalanuvchi ro'yxatdan o'tganda batafsil ma'lumotlar bilan xabarnoma.</li>
+            <li>Yangi mahsulot qo'shilganda xabarnoma.</li>
+            <li>Buyurtma statusi o'zgarganda xabarnoma.</li>
+            <li>Bot orqali sayt statistikasi (foydalanuvchilar, mahsulotlar, sotilganlar, ombordagilar) olish uchun <code>/stats</code> buyrug'i.</li>
+            <li>Ma'lum bir foydalanuvchi haqida batafsil ma'lumot (buyurtmalar soni, sarflangan summa, saqlangan karta holati) olish uchun <code>/userinfo &lt;username&gt;</code> buyrug'i.</li>
+        </ul>
+
+        <h2>Xavfsizlik va qulaylik</h2>
+        <p>Biz foydalanuvchi ma'lumotlarining xavfsizligiga katta e'tibor beramiz. To'lov ma'lumotlari to'g'ridan-to'g'ri saqlanmaydi, faqatgina to'lov usulining mavjudligi imitatsiya qilinadi. Sayt barcha turdagi qurilmalarda qulay ishlashi uchun moslashuvchan (responsive) dizaynga ega.</p>
+
+        <p style="text-align: center; margin-top: 40px;">
+            <a href="{% url 'cargo_14:home' %}" class="cta-button">Saytga o'tish</a>
+        </p>
+
+        <div class="footer-text">
+            <p>© 2024 Cargo-14. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </div>
+</body>
+</html>
