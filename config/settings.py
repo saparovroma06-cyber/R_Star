@@ -18,9 +18,6 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 ALLOWED_HOSTS = ['*']
 
 
-
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -39,11 +36,11 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',   
     'allauth.socialaccount.providers.github',   
-
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <--- WhiteNoise добавлен для раздачи статики на Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -51,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware', 
-
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -61,7 +57,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
-
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -106,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/6.1/topics/i18n/
+# https://docs.numpy.org/... or https://docs.djangoproject.com/en/6.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -120,11 +115,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# Настройки WhiteNoise для эффективного сжатия и кэширования статики на production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 MEDIA_URL = 'media/'
@@ -142,10 +140,10 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_LOGIN_METHODS = {'email', 'username'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*']
 ACCOUNT_SESSION_REMEMBER = True
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Отключить подтверждение email для упрощения
-SOCIALACCOUNT_AUTO_SIGNUP = True # Автоматическая регистрация через соцсети
-SOCIALACCOUNT_LOGIN_ON_GET = True # Oraliq sahifasiz to'g'ridan-to'g'ri Google/GitHub sahifasiga o'tish
-ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter' # Используем стандартный адаптер
+ACCOUNT_EMAIL_VERIFICATION = 'none' 
+SOCIALACCOUNT_AUTO_SIGNUP = True 
+SOCIALACCOUNT_LOGIN_ON_GET = True 
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter' 
 
 ACCOUNT_FORMS = {
     'login': 'cargo_14.forms.UserLoginForm',
@@ -165,27 +163,16 @@ SOCIALACCOUNT_PROVIDERS = {
         'APP': {
             'client_id': os.getenv('GOOGLE_CLIENT_ID'),
             'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
-            'key': '' # optional
+            'key': '' 
         }
     },
     'github': {
         'APP': {
             'client_id': os.getenv('GITHUB_CLIENT_ID'),
             'secret': os.getenv('GITHUB_CLIENT_SECRET'),
-            'key': '' # optional
+            'key': '' 
         }
     }
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
-# 1 Dark mode va light mode uchun sozlamalar qo'shish
-# 2 Home pageda umumah hamma html da container class qo'shish kerak elementlar devorlarga juda ham yaqin bo'lmasligi uchun
-# 3 Home page productlar div juda ham yomon joylashgan yani 4 ta product div ekranni to'liq egallamayapti, 4 ta product div ekranni to'liq egallashi kerak
-# 4 Narxlar va skidkadagi narxlar uchun django humanize filter ishlatish kerak, narxlar 1000 dan katta bo'lsa 1,000.00 ko'rinishida chiqishi kerak
-# 5 Ro'yxatdan o'tish ishlamayabdi hamma file da malumot yozsam ham baribir hamma field required deb chiqyapti, ro'yxatdan o'tish formasi ishlashi kerak
-
-
-
