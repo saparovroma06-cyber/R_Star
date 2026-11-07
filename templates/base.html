@@ -96,6 +96,29 @@
     </main>
 
     <!-- Скрипт интеграции с Telegram WebApp -->
+    <!-- AI Assistant Button -->
+    <button id="ai-assistant-toggle-btn" class="ai-assistant-toggle-btn">
+        🤖 AI Yordamchi
+    </button>
+
+    <!-- AI Assistant Chat Window -->
+    <div id="ai-assistant-chat-window" class="ai-assistant-chat-window">
+        <div class="chat-header">
+            <h3>🤖 AI Yordamchi</h3>
+            <button class="close-chat-btn" onclick="toggleAiAssistant()">✕</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- AI xabarlari shu yerga qo'shiladi -->
+            <div class="ai-message">
+                <p>Salom! Men Cargo-14 AI yordamchisiman. Sizga qanday yordam bera olaman?</p>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="ai-chat-input" placeholder="Savolingizni yozing...">
+            <button id="ai-send-btn">Yuborish</button>
+        </div>
+    </div>
+
     <script src="https://telegram.org"></script>
     <script>
         // Инициализируем Telegram WebApp, чтобы бот мог понимать действия на сайте

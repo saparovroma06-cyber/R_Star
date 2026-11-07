@@ -32,4 +32,5 @@ urlpatterns = [
     path('product/<int:pk>/edit-main-image/', views.edit_product_main_image_view, name='edit_product_main_image'),
     path('presentation/', views.presentation_view, name='presentation'),
     path('ai-assistant/', views.ai_assistant_view, name='ai_assistant'),
+    path('mark-tutorial-completed/', views.mark_tutorial_completed, name='mark_tutorial_completed'),
 ]

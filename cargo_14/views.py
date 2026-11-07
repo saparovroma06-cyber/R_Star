@@ -95,6 +95,7 @@ def home(request):
         'favorites_count': favorites_count,
         'user_products_count': user_products_count,
         'lang': lang,
+        'open_tutorial': open_tutorial,
     }
     return render(request, 'cargo_14/index.html', context)
 
@@ -705,6 +706,15 @@ def presentation_view(request):
         'lang': lang,
     }
     return render(request, 'cargo_14/presentation.html', context)
+
+@login_required
+def mark_tutorial_completed(request):
+    if request.user.is_authenticated:
+        profile = request.user.profile
+        profile.first_login_completed = True
+        profile.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'message': 'Not authenticated'}, status=401)
 
 
 @csrf_exempt

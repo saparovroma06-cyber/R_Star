@@ -317,6 +317,140 @@
         </div>
     </footer>
 
+    <!-- ===== ONBOARDING WELCOME MODAL ===== -->
+    <div class="onboarding-backdrop" id="onboardingBackdrop">
+        <div class="onboarding-modal">
+            <span class="onboarding-modal-badge">🎓 {% if lang == 'ru' %}ОБУЧЕНИЕ{% elif lang == 'en' %}ONBOARDING{% else %}O'QUV QO'LLANMA{% endif %}</span>
+            <h2 class="onboarding-modal-title">
+                {% if lang == 'ru' %}Добро пожаловать в Cargo-14!
+                {% elif lang == 'en' %}Welcome to Cargo-14!
+                {% else %}Cargo-14 ga xush kelibsiz!{% endif %}
+            </h2>
+            <p class="onboarding-modal-desc">
+                {% if lang == 'ru' %}Мы покажем вам ключевые элементы сайта за несколько шагов. Это займёт меньше минуты!
+                {% elif lang == 'en' %}We'll guide you through the key features in a few steps. It takes less than a minute!
+                {% else %}Saytning asosiy bo'limlarini bir necha qadamda ko'rsatamiz. Bu bir daqiqadan kam vaqt oladi!{% endif %}
+            </p>
+            <div class="onboarding-features-list">
+                <div class="onboarding-feat-item"><span class="onboarding-feat-icon">🔍</span>
+                    {% if lang == 'ru' %}Быстрый поиск{% elif lang == 'en' %}Quick search{% else %}Tezkor qidiruv{% endif %}
+                </div>
+                <div class="onboarding-feat-item"><span class="onboarding-feat-icon">🛒</span>
+                    {% if lang == 'ru' %}Корзина и покупки{% elif lang == 'en' %}Cart & shopping{% else %}Savat va xarid{% endif %}
+                </div>
+                <div class="onboarding-feat-item"><span class="onboarding-feat-icon">🎨</span>
+                    {% if lang == 'ru' %}3 темы оформления{% elif lang == 'en' %}3 design themes{% else %}3 ta dizayn mavzusi{% endif %}
+                </div>
+                <div class="onboarding-feat-item"><span class="onboarding-feat-icon">🤖</span>
+                    {% if lang == 'ru' %}AI-помощник{% elif lang == 'en' %}AI assistant{% else %}AI yordamchi{% endif %}
+                </div>
+            </div>
+            <div class="onboarding-modal-actions">
+                <button class="onboarding-btn-primary" onclick="startTour()">
+                    🚀 {% if lang == 'ru' %}Начать обзор{% elif lang == 'en' %}Start Tour{% else %}Ekskursiyani boshlash{% endif %}
+                </button>
+                <button class="onboarding-btn-skip" onclick="skipOnboarding()">
+                    {% if lang == 'ru' %}Пропустить{% elif lang == 'en' %}Skip{% else %}O'tkazib yuborish{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOUR SPOTLIGHT & TOOLTIP ===== -->
+    <div class="tour-spotlight-box" id="tourSpotlight"></div>
+    <div class="tour-tooltip-card" id="tourTooltip">
+        <div class="tour-tooltip-header">
+            <span class="tour-step-pill" id="tourStepPill"></span>
+            <button class="tour-close-btn" onclick="endTour()" title="{% if lang == 'ru' %}Закрыть{% elif lang == 'en' %}Close{% else %}Yopish{% endif %}">✕</button>
+        </div>
+        <h4 class="tour-tooltip-title" id="tourTitle"></h4>
+        <p class="tour-tooltip-text" id="tourText"></p>
+        <div class="tour-progress-bar">
+            <div class="tour-progress-fill" id="tourProgressFill"></div>
+        </div>
+        <div class="tour-tooltip-footer">
+            <button class="tour-btn tour-btn-quit" onclick="endTour()">{% if lang == 'ru' %}Завершить{% elif lang == 'en' %}Quit{% else %}Tugatish{% endif %}</button>
+            <div style="display:flex;gap:8px;">
+                <button class="tour-btn tour-btn-prev" id="tourPrevBtn" onclick="tourPrev()">{% if lang == 'ru' %}Назад{% elif lang == 'en' %}Back{% else %}Orqaga{% endif %}</button>
+                <button class="tour-btn tour-btn-next" id="tourNextBtn" onclick="tourNext()">{% if lang == 'ru' %}Далее{% elif lang == 'en' %}Next{% else %}Keyingi{% endif %}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AI ASSISTANT WIDGET (Bottom-Left) ===== -->
+    <div class="ai-widget-wrapper" id="aiWidgetWrapper">
+        <!-- Floating Launch Button -->
+        <div class="ai-launcher-btn" id="aiLauncherBtn" onclick="toggleAiChat()">
+            <div class="ai-launcher-avatar">
+                🤖
+                <span class="ai-status-pulse"></span>
+            </div>
+            <div class="ai-launcher-labels">
+                <span class="ai-launcher-title">AI {% if lang == 'ru' %}Помощник{% elif lang == 'en' %}Assistant{% else %}Yordamchi{% endif %}</span>
+                <span class="ai-launcher-sub">{% if lang == 'ru' %}Онлайн — спроси меня{% elif lang == 'en' %}Online — ask me{% else %}Onlayn — so'rang{% endif %}</span>
+            </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="ai-chat-window" id="aiChatWindow">
+            <div class="ai-chat-header">
+                <div class="ai-chat-header-info">
+                    <div class="ai-chat-header-avatar">🤖</div>
+                    <div>
+                        <div class="ai-chat-header-title">Cargo-14 AI</div>
+                        <div class="ai-chat-header-status">
+                            <span style="width:7px;height:7px;background:#00e676;border-radius:50%;display:inline-block;"></span>
+                            {% if lang == 'ru' %}В сети{% elif lang == 'en' %}Online{% else %}Onlayn{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-chat-header-actions">
+                    <button class="ai-header-btn" onclick="toggleAiChat()" title="{% if lang == 'ru' %}Свернуть{% elif lang == 'en' %}Minimize{% else %}Yopish{% endif %}">✕</button>
+                </div>
+            </div>
+
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <!-- Welcome message -->
+                <div class="ai-message bot">
+                    <div class="ai-msg-avatar">🤖</div>
+                    <div class="ai-msg-bubble">
+                        {% if lang == 'ru' %}
+                        👋 <b>Привет, боец!</b> Я тактический ИИ-помощник Cargo-14.<br>Помогу выбрать товар, расскажу про скидки, доставку и проведу обзор по сайту. Что вас интересует?
+                        {% elif lang == 'en' %}
+                        👋 <b>Hello warrior!</b> I'm your Cargo-14 Tactical AI Assistant.<br>I can help you find products, check deals, shipping info, or give you a site tour. What are you looking for?
+                        {% else %}
+                        👋 <b>Assalomu alaykum, jangchi!</b> Men Cargo-14 taktik AI yordamchisiman.<br>Mahsulot tanlash, chegirmalar, yetkazib berish va sayt bo'yicha ekskursiyada yordam beraman. Nima qidiryapsiz?
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Typing indicator -->
+                <div class="ai-typing-indicator" id="aiTypingIndicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+
+            <!-- Quick Chips -->
+            <div class="ai-quick-chips" id="aiQuickChips">
+                <button class="ai-chip" onclick="sendAiQuick('Gel blaster')">🔫 {% if lang == 'ru' %}Гель-бластеры{% elif lang == 'en' %}Gel Blasters{% else %}Gel Blasterlar{% endif %}</button>
+                <button class="ai-chip" onclick="sendAiQuick('Katta chegirmalar')">🔥 {% if lang == 'ru' %}Скидки{% elif lang == 'en' %}Deals{% else %}Chegirmalar{% endif %}</button>
+                <button class="ai-chip" onclick="sendAiQuick('Qanday promokodlar bor?')">🏷️ {% if lang == 'ru' %}Промокоды{% elif lang == 'en' %}Promo{% else %}Promokodlar{% endif %}</button>
+                <button class="ai-chip" onclick="sendAiQuick('Yetkazib berish shartlari')">📦 {% if lang == 'ru' %}Доставка{% elif lang == 'en' %}Delivery{% else %}Yetkazish{% endif %}</button>
+                <button class="ai-chip" onclick="sendAiQuick('Sayt qanday ishlaydi?')">🎓 {% if lang == 'ru' %}Обучение{% elif lang == 'en' %}Tutorial{% else %}Qo'llanma{% endif %}</button>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="ai-chat-input-bar">
+                <input type="text" class="ai-chat-input" id="aiChatInput"
+                    placeholder="{% if lang == 'ru' %}Напишите сообщение...{% elif lang == 'en' %}Type a message...{% else %}Xabar yozing...{% endif %}"
+                    onkeydown="if(event.key==='Enter')sendAiMessage()">
+                <button class="ai-chat-send-btn" onclick="sendAiMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
     // ===== THEME & MODE UNIFIED CONTROLLER =====
@@ -342,13 +476,11 @@
     }
 
     function updateUI(mode, style) {
-        // 1. Top bar mode buttons
         const btnDark = document.getElementById('mode-dark-btn');
         const btnLight = document.getElementById('mode-light-btn');
         if (btnDark) btnDark.classList.toggle('active', mode === 'dark');
         if (btnLight) btnLight.classList.toggle('active', mode === 'light');
 
-        // 2. Header quick toggle button
         const headerToggle = document.getElementById('headerModeToggle');
         if (headerToggle) {
             const icon = headerToggle.querySelector('.mode-toggle-icon');
@@ -364,7 +496,6 @@
             }
         }
 
-        // 3. Top bar neon style buttons
         const sDark = document.getElementById('theme-dark');
         const sNeon = document.getElementById('theme-neon');
         const sNavy = document.getElementById('theme-navy');
@@ -372,7 +503,6 @@
         if (sNeon) sNeon.classList.toggle('active', style === 'neon');
         if (sNavy) sNavy.classList.toggle('active', style === 'navy');
 
-        // 4. Search dots
         const dotOrange = document.querySelector('.dot-orange');
         const dotLime = document.querySelector('.dot-lime');
         const dotPurple = document.querySelector('.dot-purple');
@@ -380,7 +510,6 @@
         if (dotLime) dotLime.classList.toggle('active', style === 'neon');
         if (dotPurple) dotPurple.classList.toggle('active', style === 'navy');
 
-        // 5. Search button style class
         const searchBtn = document.getElementById('mainSearchBtn');
         if (searchBtn) {
             searchBtn.classList.remove('style-orange', 'style-lime', 'style-purple');
@@ -390,62 +519,44 @@
         }
     }
 
-    // Set Mode: 'dark' or 'light'
     function setMode(mode) {
         const body = document.getElementById('app-body') || document.body;
         const currentStyle = getSavedStyle();
-
         if (mode === 'light') {
             body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
             body.classList.add('theme-light');
             document.documentElement.classList.add('theme-light');
-            try {
-                localStorage.setItem(STORAGE_MODE_KEY, 'light');
-                localStorage.setItem('cargo14_is_light', '1');
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_MODE_KEY, 'light'); localStorage.setItem('cargo14_is_light', '1'); } catch (e) {}
         } else {
             body.classList.remove('theme-light');
             document.documentElement.classList.remove('theme-light');
             body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
             body.classList.add('theme-' + currentStyle);
-            try {
-                localStorage.setItem(STORAGE_MODE_KEY, 'dark');
-                localStorage.setItem('cargo14_is_light', '0');
-            } catch (e) {}
+            try { localStorage.setItem(STORAGE_MODE_KEY, 'dark'); localStorage.setItem('cargo14_is_light', '0'); } catch (e) {}
         }
-
         updateUI(mode, currentStyle);
     }
 
-    // Toggle between dark and light
     function toggleMode() {
         const current = getSavedMode();
         setMode(current === 'light' ? 'dark' : 'light');
     }
 
-    // Set Neon Style: 'dark' | 'neon' | 'navy'
     function setStyle(styleKey) {
         const body = document.getElementById('app-body') || document.body;
         let style = 'dark';
         if (styleKey === 'neon' || styleKey === 'style-lime') style = 'neon';
         else if (styleKey === 'navy' || styleKey === 'style-purple') style = 'navy';
         else style = 'dark';
-
-        try {
-            localStorage.setItem(STORAGE_STYLE_KEY, style);
-            localStorage.setItem('cargo14_unified_style', style);
-        } catch (e) {}
-
+        try { localStorage.setItem(STORAGE_STYLE_KEY, style); localStorage.setItem('cargo14_unified_style', style); } catch (e) {}
         const currentMode = getSavedMode();
         if (currentMode !== 'light') {
             body.classList.remove('theme-dark', 'theme-neon', 'theme-navy');
             body.classList.add('theme-' + style);
         }
-
         updateUI(currentMode, style);
     }
 
-    // Global aliases for existing buttons / scripts
     window.setMode = setMode;
     window.toggleMode = toggleMode;
     window.toggleLightMode = toggleMode;
@@ -454,17 +565,14 @@
     window.setTheme = setStyle;
     window.setSearchStyle = setStyle;
 
-    // Apply on load
     (function initTheme() {
         const savedMode = getSavedMode();
         const savedStyle = getSavedStyle();
         setMode(savedMode);
-        if (savedMode !== 'light') {
-            setStyle(savedStyle);
-        }
+        if (savedMode !== 'light') setStyle(savedStyle);
     })();
 
-    // ===== ADD TO CART (TUZATILGAN) =====
+    // ===== ADD TO CART =====
     async function addToCart(productId) {
         const btn = document.getElementById('btn-' + productId);
         const originalText = btn ? btn.innerHTML : '';
@@ -472,35 +580,24 @@
             btn.disabled = true;
             btn.innerHTML = '<span style="opacity:.7">⏳ Qo\'shilmoqda...</span>';
         }
-
         try {
             const response = await fetch('/cart/add/' + productId + '/?format=json', {
                 method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 credentials: 'same-origin'
             });
-
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
-
             if (data.success) {
-                // Update counter
                 const counter = document.getElementById('cart-counter');
                 if (counter) {
                     counter.textContent = data.items_count;
                     counter.classList.add('counter-bump');
                     setTimeout(function() { counter.classList.remove('counter-bump'); }, 300);
                 }
-
                 if (typeof window.Telegram !== 'undefined' && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
                     window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
                 }
-
                 if (btn) {
                     btn.innerHTML = '✅ Savatga qo\'shildi!';
                     btn.style.background = '#00c853';
@@ -557,30 +654,325 @@
     function toggleUserDropdown(event) {
         if (event) event.stopPropagation();
         const dropdown = document.getElementById('userDropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('show');
-        }
+        if (dropdown) dropdown.classList.toggle('show');
     }
-
     document.addEventListener('click', function (event) {
         const dropdown = document.getElementById('userDropdown');
         const container = document.querySelector('.user-menu-container');
-        if (dropdown && container && !container.contains(event.target)) {
-            dropdown.classList.remove('show');
+        if (dropdown && container && !container.contains(event.target)) dropdown.classList.remove('show');
+    });
+
+    // ===================================================================
+    //  ONBOARDING TUTORIAL SYSTEM (works for EVERYONE, including guests)
+    // ===================================================================
+    const ONBOARDING_KEY = 'cargo14_onboarding_done';
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const currentLang = '{{ lang|default:"uz" }}';
+
+    // Tour step definitions (multilingual)
+    const tourSteps = {
+        uz: [
+            { selector: '.theme-bar', title: '🎨 Rejim va Uslublar', text: 'Bu yerda qorong\'u/yorug\' rejimni almashtiring va 3 xil neon uslubdan (Olovli, Zumrad, Fiolet) birini tanlang.' },
+            { selector: '.header-nav', title: '🧭 Sahifalar', text: 'Bosh sahifa, Yangiliklar va Yordam bo\'limlariga o\'ting. Bu yerda saytdagi barcha asosiy sahifalar joylashgan.' },
+            { selector: '.search-wrapper', title: '🔍 Qidiruv', text: 'Mahsulot nomini kiriting va ⚡ tugmasini bosing. Natijalar bir lahzada chiqadi!' },
+            { selector: '.category-strip', title: '📂 Kategoriyalar', text: 'Kategoriyalar bo\'yicha filtrlang: Pistoletlar, Avtomatlar, Mashinalar, Skeytlar va boshqalar.' },
+            { selector: '.product-card', title: '🛍️ Mahsulot Kartasi', text: 'Har bir kartada rasm, narx, chegirma va \"Savatga\" tugmasi bor. ❤️ bosib sevimlilaringizga qo\'shing!' },
+            { selector: '.ai-widget-wrapper', title: '🤖 AI Yordamchi', text: 'Chap pastdagi AI tugmasini bosing va savol bering! U mahsulotlar, narxlar, yetkazish va promokodlar haqida biladi.' },
+        ],
+        ru: [
+            { selector: '.theme-bar', title: '🎨 Режим и Стили', text: 'Переключайте тёмный/светлый режим и выбирайте один из 3-х неоновых стилей (Огненный, Изумрудный, Фиолетовый).' },
+            { selector: '.header-nav', title: '🧭 Навигация', text: 'Перейдите на главную, новости или страницу помощи. Здесь находятся все основные разделы.' },
+            { selector: '.search-wrapper', title: '🔍 Поиск', text: 'Введите название товара и нажмите ⚡. Результаты появятся мгновенно!' },
+            { selector: '.category-strip', title: '📂 Категории', text: 'Фильтруйте по категориям: Пистолеты, Автоматы, Машинки, Скейты и другое.' },
+            { selector: '.product-card', title: '🛍️ Карточка Товара', text: 'Каждая карточка содержит фото, цену, скидку и кнопку «В корзину». Нажмите ❤️ чтобы добавить в избранное!' },
+            { selector: '.ai-widget-wrapper', title: '🤖 AI Помощник', text: 'Нажмите на кнопку AI слева внизу и задайте вопрос! Он знает всё о товарах, ценах, доставке и промокодах.' },
+        ],
+        en: [
+            { selector: '.theme-bar', title: '🎨 Modes & Styles', text: 'Switch between dark/light mode and pick one of 3 neon styles (Flame, Emerald, Violet).' },
+            { selector: '.header-nav', title: '🧭 Navigation', text: 'Go to Home, News, or Help pages. All main sections are here.' },
+            { selector: '.search-wrapper', title: '🔍 Search', text: 'Type a product name and hit ⚡. Results appear instantly!' },
+            { selector: '.category-strip', title: '📂 Categories', text: 'Filter by category: Pistols, Rifles, Cars, Skateboards and more.' },
+            { selector: '.product-card', title: '🛍️ Product Card', text: 'Each card shows an image, price, discount and "Add to cart" button. Tap ❤️ to add to favorites!' },
+            { selector: '.ai-widget-wrapper', title: '🤖 AI Assistant', text: 'Click the AI button at the bottom-left and ask a question! It knows about products, prices, delivery and promo codes.' },
+        ],
+    };
+
+    let currentTourStep = 0;
+    let activeSteps = [];
+
+    function shouldShowOnboarding() {
+        try {
+            if (localStorage.getItem(ONBOARDING_KEY) === '1') return false;
+        } catch(e) {}
+        // For authenticated users, also check server-side flag
+        {% if user.is_authenticated %}
+            {% if open_tutorial %}return true;{% else %}return false;{% endif %}
+        {% else %}
+            return true;
+        {% endif %}
+    }
+
+    function markOnboardingDone() {
+        try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch(e) {}
+        // Also mark server-side for authenticated users
+        {% if user.is_authenticated %}
+        fetch('{% url "cargo_14:mark_tutorial_completed" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(function(){});
+        {% endif %}
+    }
+
+    function skipOnboarding() {
+        document.getElementById('onboardingBackdrop').classList.remove('active');
+        markOnboardingDone();
+    }
+
+    function startTour() {
+        document.getElementById('onboardingBackdrop').classList.remove('active');
+        activeSteps = tourSteps[currentLang] || tourSteps['uz'];
+        currentTourStep = 0;
+        showTourStep(currentTourStep);
+    }
+
+    function showTourStep(idx) {
+        const steps = activeSteps;
+        if (idx < 0 || idx >= steps.length) { endTour(); return; }
+
+        const step = steps[idx];
+        const el = document.querySelector(step.selector);
+        const spotlight = document.getElementById('tourSpotlight');
+        const tooltip = document.getElementById('tourTooltip');
+        const pill = document.getElementById('tourStepPill');
+        const title = document.getElementById('tourTitle');
+        const text = document.getElementById('tourText');
+        const progress = document.getElementById('tourProgressFill');
+        const prevBtn = document.getElementById('tourPrevBtn');
+        const nextBtn = document.getElementById('tourNextBtn');
+
+        // Update content
+        pill.textContent = (idx + 1) + ' / ' + steps.length;
+        title.textContent = step.title;
+        text.textContent = step.text;
+        progress.style.width = ((idx + 1) / steps.length * 100) + '%';
+        prevBtn.style.display = idx === 0 ? 'none' : '';
+        nextBtn.textContent = idx === steps.length - 1
+            ? (currentLang === 'ru' ? 'Готово!' : currentLang === 'en' ? 'Done!' : 'Tayyor!')
+            : (currentLang === 'ru' ? 'Далее' : currentLang === 'en' ? 'Next' : 'Keyingi');
+
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(function() {
+                const rect = el.getBoundingClientRect();
+                const pad = 8;
+                spotlight.style.top = (rect.top - pad) + 'px';
+                spotlight.style.left = (rect.left - pad) + 'px';
+                spotlight.style.width = (rect.width + pad * 2) + 'px';
+                spotlight.style.height = (rect.height + pad * 2) + 'px';
+                spotlight.classList.add('active');
+
+                // Position tooltip
+                const tooltipW = 360;
+                let tooltipTop = rect.bottom + 16;
+                let tooltipLeft = rect.left;
+
+                // If it would go off-screen bottom, show above
+                if (tooltipTop + 200 > window.innerHeight) {
+                    tooltipTop = Math.max(10, rect.top - 220);
+                }
+                // If it would go off-screen right, shift left
+                if (tooltipLeft + tooltipW > window.innerWidth) {
+                    tooltipLeft = Math.max(10, window.innerWidth - tooltipW - 20);
+                }
+
+                tooltip.style.top = tooltipTop + 'px';
+                tooltip.style.left = tooltipLeft + 'px';
+                tooltip.classList.add('active');
+            }, 350);
+        } else {
+            spotlight.classList.remove('active');
+            tooltip.style.top = '50%';
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translate(-50%, -50%)';
+            tooltip.classList.add('active');
+        }
+    }
+
+    function tourNext() {
+        if (currentTourStep >= activeSteps.length - 1) {
+            endTour();
+        } else {
+            currentTourStep++;
+            document.getElementById('tourSpotlight').classList.remove('active');
+            document.getElementById('tourTooltip').classList.remove('active');
+            setTimeout(function() { showTourStep(currentTourStep); }, 200);
+        }
+    }
+
+    function tourPrev() {
+        if (currentTourStep > 0) {
+            currentTourStep--;
+            document.getElementById('tourSpotlight').classList.remove('active');
+            document.getElementById('tourTooltip').classList.remove('active');
+            setTimeout(function() { showTourStep(currentTourStep); }, 200);
+        }
+    }
+
+    function endTour() {
+        document.getElementById('tourSpotlight').classList.remove('active');
+        document.getElementById('tourTooltip').classList.remove('active');
+        markOnboardingDone();
+    }
+
+    // Trigger onboarding on first visit
+    document.addEventListener('DOMContentLoaded', function() {
+        if (shouldShowOnboarding()) {
+            setTimeout(function() {
+                document.getElementById('onboardingBackdrop').classList.add('active');
+            }, 800);
         }
     });
 
-    // ===== ONBOARDING / TUTORIAL =====
-    {% if open_tutorial %}
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Foydalanuvchi birinchi marta kirdi, o'quv qo'llanmasini ishga tushirish.");
-        // Bu yerda siz intro.js yoki boshqa interaktiv tur kutubxonasini ishga tushirasiz
-        // Va foydalanuvchi o'quv qo'llanmasini tugatgandan so'ng,
-        // serverga so'rov yuborib, first_login_completed ni True qilib o'zgartirasiz.
-        // Misol uchun:
-        // fetch('/mark-tutorial-completed/', { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-    });
-    {% endif %}
+    // ===================================================================
+    //  AI ASSISTANT CHAT WIDGET
+    // ===================================================================
+    function toggleAiChat() {
+        const chatWin = document.getElementById('aiChatWindow');
+        const launcherBtn = document.getElementById('aiLauncherBtn');
+        chatWin.classList.toggle('open');
+        if (chatWin.classList.contains('open')) {
+            launcherBtn.style.opacity = '0';
+            launcherBtn.style.pointerEvents = 'none';
+            document.getElementById('aiChatInput').focus();
+        } else {
+            launcherBtn.style.opacity = '1';
+            launcherBtn.style.pointerEvents = 'auto';
+        }
+    }
+
+    function sendAiQuick(query) {
+        const input = document.getElementById('aiChatInput');
+        input.value = query;
+        sendAiMessage();
+    }
+
+    async function sendAiMessage() {
+        const input = document.getElementById('aiChatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+
+        // Add user message bubble
+        const msgsContainer = document.getElementById('aiChatMessages');
+        const userMsg = document.createElement('div');
+        userMsg.className = 'ai-message user';
+        userMsg.innerHTML = '<div class="ai-msg-avatar">👤</div><div class="ai-msg-bubble">' + escapeHtml(text) + '</div>';
+        msgsContainer.insertBefore(userMsg, document.getElementById('aiTypingIndicator'));
+        scrollChat();
+
+        // Show typing indicator
+        const typing = document.getElementById('aiTypingIndicator');
+        typing.classList.add('active');
+        scrollChat();
+
+        try {
+            const response = await fetch('{% url "cargo_14:ai_assistant" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ message: text, lang: currentLang }),
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            typing.classList.remove('active');
+
+            if (data.success) {
+                // Bot reply bubble
+                const botMsg = document.createElement('div');
+                botMsg.className = 'ai-message bot';
+                let bubbleHtml = '<div class="ai-msg-avatar">🤖</div><div class="ai-msg-bubble">' + data.reply;
+
+                // Product cards
+                if (data.products && data.products.length > 0) {
+                    bubbleHtml += '<div class="ai-product-cards-grid">';
+                    data.products.forEach(function(p) {
+                        const imgHtml = p.image_url
+                            ? '<img src="' + p.image_url + '" alt="' + escapeHtml(p.name) + '">'
+                            : '<span style="font-size:20px;">📦</span>';
+                        const priceHtml = p.sale > 0
+                            ? '<span class="ai-prod-cur">' + numberWithCommas(p.sale_price) + ' UZS</span> <span class="ai-prod-old">' + numberWithCommas(p.price) + '</span>'
+                            : '<span class="ai-prod-cur">' + numberWithCommas(p.price) + ' UZS</span>';
+                        bubbleHtml += '<a href="' + p.url + '" class="ai-product-card-item">'
+                            + '<div class="ai-prod-thumb">' + imgHtml + '</div>'
+                            + '<div class="ai-prod-info">'
+                            + '<div class="ai-prod-name">' + escapeHtml(p.name) + '</div>'
+                            + '<div class="ai-prod-prices">' + priceHtml + '</div>'
+                            + '</div>'
+                            + '<span class="ai-prod-btn">→</span>'
+                            + '</a>';
+                    });
+                    bubbleHtml += '</div>';
+                }
+
+                bubbleHtml += '</div>';
+                botMsg.innerHTML = bubbleHtml;
+                msgsContainer.insertBefore(botMsg, typing);
+
+                // Update quick chips
+                if (data.quick_actions) {
+                    const chipsWrap = document.getElementById('aiQuickChips');
+                    chipsWrap.innerHTML = '';
+                    data.quick_actions.forEach(function(qa) {
+                        const chip = document.createElement('button');
+                        chip.className = 'ai-chip';
+                        chip.textContent = qa.title;
+                        chip.onclick = function() { sendAiQuick(qa.query); };
+                        chipsWrap.appendChild(chip);
+                    });
+                }
+
+                // If AI says to open tutorial
+                if (data.open_tutorial) {
+                    setTimeout(function() {
+                        toggleAiChat();
+                        try { localStorage.removeItem(ONBOARDING_KEY); } catch(e) {}
+                        activeSteps = tourSteps[data.lang || currentLang] || tourSteps['uz'];
+                        currentTourStep = 0;
+                        showTourStep(currentTourStep);
+                    }, 600);
+                }
+            }
+            scrollChat();
+        } catch (err) {
+            typing.classList.remove('active');
+            const errMsg = document.createElement('div');
+            errMsg.className = 'ai-message bot';
+            errMsg.innerHTML = '<div class="ai-msg-avatar">🤖</div><div class="ai-msg-bubble" style="border-color:#f44336;">❌ '
+                + (currentLang === 'ru' ? 'Ошибка соединения. Попробуйте снова.' : currentLang === 'en' ? 'Connection error. Try again.' : 'Xatolik yuz berdi. Qaytadan urining.')
+                + '</div>';
+            msgsContainer.insertBefore(errMsg, typing);
+            scrollChat();
+        }
+    }
+
+    function scrollChat() {
+        const mc = document.getElementById('aiChatMessages');
+        setTimeout(function() { mc.scrollTop = mc.scrollHeight; }, 50);
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
+
+    function numberWithCommas(n) {
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
     </script>
 </body>
 </html>
