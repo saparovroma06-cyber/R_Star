@@ -141,6 +141,75 @@
             // Пример: Передача данных обратно в бот (если нужно сразу закрыть WebApp и оформить заказ)
             // tg.sendData(JSON.stringify({action: "add_to_cart", product_id: productId}));
         }
+
+        // ===== AI ASSISTANT JAVASCRIPT =====
+        const aiAssistantToggleBtn = document.getElementById('ai-assistant-toggle-btn');
+        const aiAssistantChatWindow = document.getElementById('ai-assistant-chat-window');
+        const aiChatInput = document.getElementById('ai-chat-input');
+        const aiSendBtn = document.getElementById('ai-send-btn');
+        const chatMessages = document.getElementById('chat-messages');
+
+        function toggleAiAssistant() {
+            aiAssistantChatWindow.classList.toggle('open');
+        }
+
+        aiAssistantToggleBtn.addEventListener('click', toggleAiAssistant);
+
+        aiSendBtn.addEventListener('click', sendMessage);
+        aiChatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const userMessageText = aiChatInput.value.trim();
+            if (userMessageText === '') return;
+
+            // Foydalanuvchi xabarini chatga qo'shish
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('user-message');
+            userMessageDiv.innerHTML = `<p>${userMessageText}</p>`;
+            chatMessages.appendChild(userMessageDiv);
+            aiChatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Pastga aylantirish
+
+            // AI yordamchisiga so'rov yuborish
+            try {
+                const response = await fetch('{% url "cargo_14:ai_assistant" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message: userMessageText, lang: '{{ lang|default:"uz" }}' })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.classList.add('ai-message');
+                    aiMessageDiv.innerHTML = `<p>${data.reply}</p>`;
+                    chatMessages.appendChild(aiMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight; // Pastga aylantirish
+                } else {
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.classList.add('ai-message');
+                    errorMessageDiv.style.color = '#e57373';
+                    errorMessageDiv.innerHTML = `<p>Xatolik: ${data.message || 'Javobni yuklab bo\'lmadi.'}</p>`;
+                    chatMessages.appendChild(errorMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } catch (error) {
+                console.error('AI Assistant xatosi:', error);
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.classList.add('ai-message');
+                errorMessageDiv.style.color = '#e57373';
+                errorMessageDiv.innerHTML = `<p>Server bilan bog\'lanishda xatolik yuz berdi.</p>`;
+                chatMessages.appendChild(errorMessageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
     </script>
 </body>
 </html>

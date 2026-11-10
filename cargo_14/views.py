@@ -77,6 +77,11 @@ def home(request):
         user_products_count = request.user.products.count()
         if not request.user.profile.first_login_completed:
             open_tutorial = True
+    else:
+        # Ro'yxatdan o'tmagan foydalanuvchilar uchun
+        if not request.session.get('tutorial_shown', False):
+            open_tutorial = True
+            request.session['tutorial_shown'] = True # Tutorial ko'rsatilganini belgilash
 
     # Pagination: 4 products per page
     paginator = Paginator(products, 4)
@@ -707,14 +712,14 @@ def presentation_view(request):
     }
     return render(request, 'cargo_14/presentation.html', context)
 
-@login_required
 def mark_tutorial_completed(request):
     if request.user.is_authenticated:
         profile = request.user.profile
         profile.first_login_completed = True
         profile.save()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'message': 'Not authenticated'}, status=401)
+    else:
+        request.session['tutorial_shown'] = True
+    return JsonResponse({'success': True})
 
 
 @csrf_exempt
