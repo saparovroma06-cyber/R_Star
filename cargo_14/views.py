@@ -16,7 +16,7 @@ from django.views.generic import RedirectView
 from .telegram_utils import send_telegram_notification
 from .models import Category, Product, ProductImage, Cart, CartItem, UserProfile, Comment, Favorite, News, Order, OrderItem, Promocode
 
-from .forms import UserRegisterForm, UserLoginForm, ProductCreateForm, UserProfileEditForm, CommentForm, SupportTicketForm, ProductImageUpdateForm
+from .forms import UserRegisterForm, UserLoginForm, ProductCreateForm, UserProfileEditForm, CommentForm, SupportTicketForm, ProductImageUpdateForm, CheckoutForm
 
 # ---------- helpers ----------
 LANG_KEY = 'ui_lang'
@@ -548,6 +548,7 @@ def cart_view(request):
         'favorites_count': favorites_count,
         'user_products_count': user_products_count,
         'lang': lang,
+        'profile': request.user.profile if request.user.is_authenticated else None,
     })
 
 def apply_promocode_view(request):
@@ -576,11 +577,14 @@ def apply_promocode_view(request):
 @login_required(login_url='account_login') # Используем 'account_login'
 def checkout_view(request):
     lang = get_lang(request)
+
     if request.method == 'POST':
         delivery_method = request.POST.get('delivery_method')
-        total_amount = float(request.POST.get('total_amount'))
         promocode_name = request.POST.get('promocode_name')
-        promocode_discount = float(request.POST.get('promocode_discount', 0))
+        try:
+            promocode_discount = float(request.POST.get('promocode_discount', 0))
+        except (TypeError, ValueError):
+            promocode_discount = 0
 
         if not delivery_method:
             messages.error(request, "Iltimos, yetkazib berish usulini tanlang!")
@@ -593,28 +597,40 @@ def checkout_view(request):
             messages.error(request, "Savat bo'sh, buyurtma berish mumkin emas.")
             return redirect('cargo_14:home')
 
+        # Majburiy ma'lumotlar: ism, telefon, manzil va xarita nuqtasi
+        checkout_form = CheckoutForm(request.POST)
+        if not checkout_form.is_valid():
+            for field, errors in checkout_form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{checkout_form.fields[field].label}: {error}")
+            return redirect('cargo_14:cart_view')
+
+        checkout_data = checkout_form.cleaned_data
+
         promocode_obj = None
-        if promocode_name: # <-- Промокод необязателен, эта проверка удалена
+        if promocode_name:
             try:
                 promocode_obj = Promocode.objects.get(name__iexact=promocode_name, is_active=True)
                 if not promocode_obj.is_valid:
-                    promocode_obj = None # Промокод недействителен
+                    promocode_obj = None
             except Promocode.DoesNotExist:
                 promocode_obj = None
 
-        # --- Имитация платежной логики ---
+        # Profilni yangilash: telefon va manzil keyingi xaridlarda avtomatik to'ldiriladi
         user_profile = request.user.profile
+        user_profile.phone = checkout_data['phone']
+        user_profile.address = checkout_data['address']
+        user_profile.latitude = checkout_data.get('latitude') or user_profile.latitude
+        user_profile.longitude = checkout_data.get('longitude') or user_profile.longitude
+        user_profile.save()
+
+        # --- Имитация платежной логики ---
         payment_status_message = ""
 
         if user_profile.has_saved_payment_method:
-            # Если есть сохраненная карта, запрашиваем подтверждение (имитация)
-            # В реальном приложении здесь была бы интеграция с платежным шлюзом
             payment_status_message = "To'lov usuli tasdiqlandi (saqlangan karta orqali)."
-            # Здесь можно было бы добавить логику для отправки запроса на подтверждение в платежный шлюз
         else:
-            # Если нет сохраненной карты, просим "add_payment_method" (имитация)
-            # В реальном приложении здесь был бы редирект на страницу платежного шлюза для ввода данных
-            user_profile.has_saved_payment_method = True # Имитируем сохранение карты
+            user_profile.has_saved_payment_method = True
             user_profile.save()
             payment_status_message = "Yangi to'lov usuli qo'shildi (imitatsiya)."
             messages.info(request, "To'lov usuli muvaffaqiyatli 'qo'shildi'. Keyingi saf undan foydalanishingiz mumkin.")
@@ -624,9 +640,11 @@ def checkout_view(request):
             with transaction.atomic():
                 order = Order.objects.create(
                     user=request.user,
-                    full_name=request.user.first_name + " " + request.user.last_name if request.user.first_name and request.user.last_name else request.user.username,
-                    phone=user_profile.phone if user_profile.phone else 'Kiritilmagan',
-                    address="Manzil kiritilmagan", # В реальном приложении здесь была бы форма для адреса
+                    full_name=checkout_data['full_name'],
+                    phone=checkout_data['phone'],
+                    address=checkout_data['address'],
+                    latitude=checkout_data.get('latitude') or 41.311081,
+                    longitude=checkout_data.get('longitude') or 69.240562,
                     delivery_method=delivery_method,
                     shipping_cost=15000 if delivery_method == 'delivery' else 0,
                     promocode=promocode_obj,
@@ -651,6 +669,8 @@ def checkout_view(request):
                 f"<b>Buyurtma ID:</b> {order.id}\n"
                 f"<b>Foydalanuvchi:</b> {order.user.username} ({order.full_name})\n"
                 f"<b>Telefon:</b> {order.phone}\n"
+                f"<b>Manzil:</b> {order.address}\n"
+                f"<b>Xarita:</b> https://www.openstreetmap.org/?mlat={order.latitude}&mlon={order.longitude}#map=16/{order.latitude}/{order.longitude}\n"
                 f"<b>Umumiy narx:</b> {order.total_price} UZS\n"
                 f"<b>Yetkazib berish:</b> {order.get_delivery_method_display()}\n"
                 f"<b>Promokod:</b> {order.promocode.name if order.promocode else 'Yo\'q'}{f' ({order.promocode_sale}%)' if order.promocode_sale else ''}\n"

@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Savat | Cargo 14</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -134,9 +136,44 @@
     </div>
 
     <div style="background-color: #12141a; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
-        <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 15px;">Yetkazib berish usulini tanlang:</h4>
+        <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 15px;">🚚 Yetkazib berish ma'lumotlari</h4>
         <form id="checkout-form" method="POST" action="{% url 'cargo_14:checkout' %}">
             {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="checkout-full-name">Ism familiya <span style="color:#ff5252;">*</span></label>
+                <input type="text" id="checkout-full-name" name="full_name" class="form-input" required
+                       placeholder="Masalan: Sardor Karimov"
+                       value="{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="checkout-phone">Telefon raqami <span style="color:#ff5252;">*</span></label>
+                <input type="tel" id="checkout-phone" name="phone" class="form-input" required
+                       placeholder="+998 90 123 45 67"
+                       value="{{ profile.phone|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="checkout-address">Yetkazib berish manzili <span style="color:#ff5252;">*</span></label>
+                <textarea id="checkout-address" name="address" class="form-textarea" rows="2" required
+                          placeholder="Viloyat, tuman, ko'cha, uy raqami">{{ profile.address|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📍 Xaritada manzilni belgilang</label>
+                <div id="checkout-map" style="height: 260px; border-radius: 10px; border: 1px solid var(--border-color); overflow: hidden;"></div>
+                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+                    <button type="button" class="btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="locateMeCheckout()">
+                        📍 Mening joyim
+                    </button>
+                    <span id="checkout-coords" style="font-size:11px; color:var(--text-muted);"></span>
+                </div>
+                <input type="hidden" name="latitude" id="checkout-lat" value="{{ profile.latitude|default:'41.311081' }}">
+                <input type="hidden" name="longitude" id="checkout-lng" value="{{ profile.longitude|default:'69.240562' }}">
+            </div>
+
+            <h4 style="margin: 0 0 12px 0; color: #fff; font-size: 15px;">Yetkazib berish usuli:</h4>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
                     <input type="radio" name="delivery_method" value="pickup" checked onchange="updateTotalPrice()" style="width: 16px; height: 16px;">
@@ -148,7 +185,7 @@
                 </label>
             </div>
             <input type="hidden" name="total_amount" id="total-amount-input" value="{{ total_price|floatformat:0 }}">
-            <button type="button" onclick="handleCheckout()" class="btn-buy" style="max-width: 250px; padding: 14px 28px; font-size: 15px; font-weight: 700;">Buyurtma berish</button>
+            <button type="submit" class="btn-buy" style="max-width: 250px; padding: 14px 28px; font-size: 15px; font-weight: 700;">Buyurtma berish</button>
         </form>
     </div>
     {% else %}
@@ -261,18 +298,96 @@
         });
 
         // ===== CHECKOUT HANDLER =====
-        function handleCheckout() {
-            const isAuthenticated = ("{% if user.is_authenticated %}1{% endif %}" === "1");
-            if (!isAuthenticated) {
-                window.location.href = "{% url 'account_login' %}?next={% url 'cargo_14:cart_view' %}";
+        var checkoutMap = null;
+        var checkoutMarker = null;
+
+        function initCheckoutMap() {
+            var latInput = document.getElementById('checkout-lat');
+            var lngInput = document.getElementById('checkout-lng');
+            if (!latInput || !lngInput) return;
+
+            var lat = parseFloat(latInput.value) || 41.311081;
+            var lng = parseFloat(lngInput.value) || 69.240562;
+
+            var map = L.map('checkout-map').setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+            function sync(latVal, lngVal) {
+                latInput.value = latVal.toFixed(6);
+                lngInput.value = lngVal.toFixed(6);
+                marker.setLatLng([latVal, lngVal]);
+                var label = document.getElementById('checkout-coords');
+                if (label) label.textContent = '✓ ' + latVal.toFixed(5) + ', ' + lngVal.toFixed(5);
+            }
+
+            marker.on('dragend', function (e) {
+                var p = e.target.getLatLng();
+                sync(p.lat, p.lng);
+            });
+
+            map.on('click', function (e) {
+                sync(e.latlng.lat, e.latlng.lng);
+            });
+
+            checkoutMap = { map: map, sync: sync };
+            setTimeout(function () { map.invalidateSize(); }, 200);
+        }
+
+        function locateMeCheckout() {
+            if (!navigator.geolocation) {
+                alert('Brauzeringiz joylashuvni aniqlashni qo\'llab-quvvatlamaydi.');
                 return;
             }
-            updateTotalPrice();
-            const form = document.getElementById('checkout-form');
-            if (form) {
-                form.submit();
-            }
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                document.getElementById('checkout-lat').value = lat.toFixed(6);
+                document.getElementById('checkout-lng').value = lng.toFixed(6);
+                if (checkoutMap) {
+                    checkoutMap.map.setView([lat, lng], 16);
+                    checkoutMap.sync(lat, lng);
+                }
+            }, function () {
+                alert('Joylashuvni aniqlab bo\'lmadi. Ruxsat berilganini tekshiring.');
+            });
         }
+
+        function handleCheckout(event) {
+            if (event) event.preventDefault();
+
+            var phone = document.getElementById('checkout-phone');
+            var address = document.getElementById('checkout-address');
+            var fullName = document.getElementById('checkout-full-name');
+
+            if (!fullName.value.trim()) {
+                alert('Iltimos, ism va familiyangizni kiriting.');
+                fullName.focus();
+                return;
+            }
+            if (!phone.value.trim() || phone.value.replace(/\D/g, '').length < 9) {
+                alert('Iltimos, telefon raqamingizni to\'liq kiriting.');
+                phone.focus();
+                return;
+            }
+            if (!address.value.trim()) {
+                alert('Iltimos, yetkazib berish manzilini kiriting.');
+                address.focus();
+                return;
+            }
+
+            updateTotalPrice();
+            var form = document.getElementById('checkout-form');
+            if (form) form.submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initCheckoutMap();
+        });
 
         function closePaymentModal() {
             const modal = document.getElementById('payment-modal');

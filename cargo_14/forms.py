@@ -28,9 +28,14 @@ class UserRegisterForm(SignupForm): # Наследуемся от SignupForm
     )
     phone_number = forms.CharField(
         max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+998 90 123 45 67'}),
+        label="Telefon raqami *"
+    )
+    address = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Telefon raqamingiz (ixtiyoriy)'}),
-        label="Telefon raqami"
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2, 'placeholder': 'Yashash manziliniz'}),
+        label="Yashash manzili"
     )
     bio = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': 'O\'zingiz haqingizda qisqacha...'}),
@@ -50,6 +55,7 @@ class UserRegisterForm(SignupForm): # Наследуемся от SignupForm
         # Сохраняем phone_number и bio в UserProfile
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.phone = self.cleaned_data.get('phone_number')
+        profile.address = self.cleaned_data.get('address')
         profile.bio = self.cleaned_data.get('bio')
         if self.cleaned_data.get('avatar'):
             profile.avatar = self.cleaned_data['avatar']
@@ -104,14 +110,57 @@ class ProductCreateForm(forms.ModelForm):
         }
 
 class UserProfileEditForm(forms.ModelForm):
+    phone = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+998 90 123 45 67'}),
+        label="Telefon raqami *",
+    )
+    address = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2, 'placeholder': 'Toshkent, Chilonzor tumani, 9-kvartal...'}),
+        label="Yashash manzili",
+    )
+
     class Meta:
         model = UserProfile
-        fields = ['avatar', 'phone', 'bio', 'language']
+        fields = ['avatar', 'phone', 'address', 'latitude', 'longitude', 'bio', 'language']
         widgets = {
-            'phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+998 90 123 45 67'}),
             'bio': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': 'O\'zingiz haqingizda qisqacha...'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
         }
+
+
+class CheckoutForm(forms.Form):
+    """Xarid paytida so'raladigan majburiy ma'lumotlar: ism, telefon, manzil va xarita nuqtasi."""
+    full_name = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ism va familiya'}),
+        label="Ism familiya *",
+    )
+    phone = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+998 90 123 45 67'}),
+        label="Telefon raqami *",
+    )
+    address = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 2, 'placeholder': 'Viloyat, tuman, ko\'cha, uy'}),
+        label="Yetkazib berish manzili *",
+    )
+    latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
+    longitude = forms.FloatField(required=False, widget=forms.HiddenInput())
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip()
+        digits = [c for c in phone if c.isdigit()]
+        if len(digits) < 9:
+            raise forms.ValidationError("Telefon raqamini to'liq kiriting (kamida 9 ta raqam).")
+        return phone
 
 from allauth.socialaccount.forms import SignupForm as SocialSignupFormBase
 

@@ -119,22 +119,31 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'full_name', 'status', 'formatted_total_price', 'created_at']
+    list_display = ['user', 'full_name', 'phone', 'status', 'formatted_total_price', 'created_at']
     list_filter = ['status']
-    search_fields = ['user__username', 'full_name', 'phone']
+    search_fields = ['user__username', 'full_name', 'phone', 'address']
     inlines = [OrderItemInline]
+    readonly_fields = ['latitude', 'longitude']
 
     @admin.display(description="Jami summa")
     def formatted_total_price(self, obj):
         from django.contrib.humanize.templatetags.humanize import intcomma
         return f"{intcomma(obj.total_price)} UZS"
 
+    @admin.display(description="Xarita havolasi")
+    def map_link(self, obj):
+        from django.utils.html import format_html
+        return format_html(
+            '<a href="https://www.openstreetmap.org/?mlat={}&mlon={}#map=16/{}/{}" target="_blank">Xaritada ko\'rish</a>',
+            obj.latitude, obj.longitude, obj.latitude, obj.longitude,
+        )
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'phone', 'language', 'is_verified_14', 'has_saved_payment_method']
+    list_display = ['user', 'phone', 'address', 'language', 'is_verified_14', 'has_saved_payment_method']
     list_filter = ['language', 'is_verified_14', 'has_saved_payment_method']
-    search_fields = ['user__username', 'phone']
+    search_fields = ['user__username', 'phone', 'address']
 
 
 @admin.register(TelegramUserProfile)

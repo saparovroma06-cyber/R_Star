@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mening hisobim | Cargo-14</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <header style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); margin-bottom: 25px;">
@@ -68,12 +70,38 @@
                     {{ form.avatar }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Telefon raqam</label>
+                    <label class="form-label" for="{{ form.phone.id_for_label }}">Telefon raqam <span style="color:#ff5252;">*</span></label>
                     {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div style="color:#e57373; font-size:12px; margin-top:4px;">{{ form.phone.errors|striptags }}</div>
+                    {% endif %}
                 </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.address.id_for_label }}">Yashash manzilingiz</label>
+                    {{ form.address }}
+                </div>
+
+                <!-- Xarita: nuqtani tanlash -->
+                <div class="form-group">
+                    <label class="form-label">📍 Xaritada joyingizni belgilang</label>
+                    <div id="profile-map" style="height: 240px; border-radius: 10px; border: 1px solid var(--border-color); overflow: hidden;"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="locateMe('profile-map', 'id_latitude', 'id_longitude')">
+                            📍 Mening joyim
+                        </button>
+                        <span id="profile-coords" style="font-size:11px; color:var(--text-muted); align-self:center;"></span>
+                    </div>
+                    {{ form.latitude }}
+                    {{ form.longitude }}
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">O'zingiz haqingizda</label>
                     {{ form.bio }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Til</label>
+                    {{ form.language }}
                 </div>
                 <button type="submit" class="form-submit-btn" style="padding: 9px 15px; font-size: 13px;">
                     Saqlash
@@ -150,5 +178,72 @@
         </div>
 
     </div>
+
+    <script>
+        // Xaritada belgilangan nuqta bilan ishlash
+        var profileMap = null;
+        var profileMarker = null;
+
+        function initLocationMap(mapId, latId, lngId, coordsLabelId) {
+            var latInput = document.getElementById(latId);
+            var lngInput = document.getElementById(lngId);
+            if (!latInput || !lngInput) return;
+
+            var lat = parseFloat(latInput.value) || 41.311081;
+            var lng = parseFloat(lngInput.value) || 69.240562;
+
+            var map = L.map(mapId).setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+            function sync(latVal, lngVal) {
+                latInput.value = latVal.toFixed(6);
+                lngInput.value = lngVal.toFixed(6);
+                marker.setLatLng([latVal, lngVal]);
+                var label = document.getElementById(coordsLabelId);
+                if (label) label.textContent = '✓ ' + latVal.toFixed(5) + ', ' + lngVal.toFixed(5);
+            }
+
+            marker.on('dragend', function (e) {
+                var p = e.target.getLatLng();
+                sync(p.lat, p.lng);
+            });
+
+            map.on('click', function (e) {
+                sync(e.latlng.lat, e.latlng.lng);
+            });
+
+            return { map: map, marker: marker, sync: sync };
+        }
+
+        function locateMe(mapId, latId, lngId) {
+            if (!navigator.geolocation) {
+                alert('Brauzeringiz joylashuvni aniqlashni qo\'llab-quvvatlamaydi.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                var latInput = document.getElementById(latId);
+                var lngInput = document.getElementById(lngId);
+                if (latInput) latInput.value = lat.toFixed(6);
+                if (lngInput) lngInput.value = lng.toFixed(6);
+                if (profileMap) {
+                    profileMap.map.setView([lat, lng], 16);
+                    profileMap.sync(lat, lng);
+                }
+            }, function () {
+                alert('Joylashuvni aniqlab bo\'lmadi. Ruxsat berilganini tekshiring.');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            profileMap = initLocationMap('profile-map', 'id_latitude', 'id_longitude', 'profile-coords');
+        });
+    </script>
 </body>
 </html>
