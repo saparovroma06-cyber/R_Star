@@ -6,24 +6,8 @@
 :root,
 body.theme-dark {
   --bg-dark: #0c0e12;
-  --bg-card: #141720;
-  --accent: #ff5722;
-  --accent-orange: #ff5722;
-  --accent-green: #00c853;
-  --text-main: #f0f4f8;
-  --text-muted: #8b99ac;
-  --border-color: #232836;
-  --search-bg: #1a1e28;
-  --header-bg: #0c0e12;
-  --font-style: 'Inter', 'Segoe UI', sans-serif;
-  --search-btn-bg: linear-gradient(135deg, #ff3d00 0%, #ff6e40 45%, #ff9100 100%);
-  --search-btn-color: #ffffff;
-  --search-btn-border: #ff6e40;
-  --search-btn-glow: 0 0 20px rgba(255, 61, 0, 0.65), 0 4px 14px rgba(255, 61, 0, 0.4);
-  --search-btn-hover-glow: 0 0 28px rgba(255, 61, 0, 0.9), 0 6px 18px rgba(255, 61, 0, 0.5);
-  --card-hover-border: #ff5722;
-  --card-hover-glow: 0 8px 24px rgba(255, 87, 34, 0.25);
-  --theme-accent-glow: 0 0 12px rgba(255, 87, 34, 0.5);
+  ...
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ⚡ 2-STYLE: CYBER NEON (Kiber Zumrad / Lime) */
@@ -48,28 +32,16 @@ body.theme-neon {
   --card-hover-glow: 0 8px 24px rgba(0, 230, 118, 0.3);
   --theme-accent-glow: 0 0 14px rgba(0, 230, 118, 0.6);
 }
+body.theme-neon {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* 🌊 3-STYLE: LASER NAVY (Lazer Fiolet / Electric Ocean) */
 body.theme-navy {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --bg-dark: #060914;
   --bg-card: #0c1326;
-  --accent: #d500f9;
-  --accent-orange: #2979ff;
-  --accent-green: #00e5ff;
-  --text-main: #e6eeff;
-  --text-muted: #6b84b5;
-  --border-color: #19274c;
-  --search-bg: #101a35;
-  --header-bg: #060914;
-  --font-style: 'Inter', 'Segoe UI', sans-serif;
-  --search-btn-bg: linear-gradient(135deg, #2979ff 0%, #7c4dff 50%, #d500f9 100%);
-  --search-btn-color: #ffffff;
-  --search-btn-border: #d500f9;
-  --search-btn-glow: 0 0 22px rgba(213, 0, 249, 0.65), 0 4px 14px rgba(124, 77, 255, 0.45);
-  --search-btn-hover-glow: 0 0 30px rgba(213, 0, 249, 0.95), 0 6px 18px rgba(124, 77, 255, 0.6);
-  --card-hover-border: #7c4dff;
-  --card-hover-glow: 0 8px 24px rgba(124, 77, 255, 0.3);
-  --theme-accent-glow: 0 0 14px rgba(213, 0, 249, 0.6);
+  ...
 }
 
 body {
@@ -78,7 +50,7 @@ body {
   font-family: var(--font-style);
   margin: 0;
   padding: 0;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* =============================================
@@ -92,6 +64,7 @@ body {
   padding-left: 24px;
   padding-right: 24px;
   box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* =============================================
@@ -117,6 +90,7 @@ body.theme-light {
   --card-hover-border: #e64a19;
   --card-hover-glow: 0 8px 24px rgba(230, 74, 25, 0.15);
   --theme-accent-glow: 0 0 8px rgba(230, 74, 25, 0.3);
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.theme-light .product-image-wrapper {
