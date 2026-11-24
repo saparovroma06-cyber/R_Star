@@ -192,10 +192,10 @@
             var lat = parseFloat(latInput.value) || 41.311081;
             var lng = parseFloat(lngInput.value) || 69.240562;
 
-            var map = L.map(mapId).setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            var map = L.map(mapId).setView({ z: 12, lat: lat, lng: lng }, 13);
+            L.tileLayer('https://a.basemaps.cartocdn.com/light_all/12/0/0.png', {
                 maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
+                attribution: 'Cartosian Maps'
             }).addTo(map);
 
             var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
