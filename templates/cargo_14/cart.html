@@ -7,8 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Savat | Cargo 14</title>
-    <link rel="stylesheet" href="https://a.basemaps.cartocdn.com/light_all/12/0/0.png">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
@@ -184,6 +184,63 @@
                     <span>Kuryer orqali yetkazib berish (<span id="delivery-price">15,000</span> UZS)</span>
                 </label>
             </div>
+            <h4 style="margin: 0 0 12px 0; color: #fff; font-size: 15px;">💳 To'lov usuli <span style="color:#ff5252;">*</span></h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+                    <input type="radio" name="payment_method" value="cash" checked onchange="togglePaymentFields()" style="width: 16px; height: 16px;">
+                    <span>💵 Naqd pul <span style="color: var(--text-muted); font-size: 12px;">(yetkazilganda to'lanadi)</span></span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+                    <input type="radio" name="payment_method" value="card" onchange="togglePaymentFields()" style="width: 16px; height: 16px;">
+                    <span>💳 Karta orqali</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+                    <input type="radio" name="payment_method" value="transfer" onchange="togglePaymentFields()" style="width: 16px; height: 16px;">
+                    <span>🏦 Bank o'tkazmasi</span>
+                </label>
+            </div>
+
+            <!-- Karta maydonlari (faqat "Karta orqali" tanlanganda ko'rinadi) -->
+            <div id="card-fields" style="display: none; background-color: #1a1e27; border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label class="form-label" for="card-number">Karta raqami <span style="color:#ff5252;">*</span></label>
+                    <input type="text" id="card-number" name="card_number" class="form-input" inputmode="numeric"
+                           maxlength="19" placeholder="8600 1234 5678 9012" oninput="formatCardNumber(this)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="card-holder">Karta egasi <span style="color:#ff5252;">*</span></label>
+                    <input type="text" id="card-holder" name="card_holder" class="form-input"
+                           placeholder="SARADOR KARIMOV" style="text-transform: uppercase;">
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 120px;">
+                        <label class="form-label" for="card-expiry">Muddati (MM/YY) <span style="color:#ff5252;">*</span></label>
+                        <input type="text" id="card-expiry" name="card_expiry" class="form-input" inputmode="numeric"
+                               maxlength="5" placeholder="MM/YY" oninput="formatExpiry(this)">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 100px;">
+                        <label class="form-label" for="card-cvv">CVV <span style="color:#ff5252;">*</span></label>
+                        <input type="password" id="card-cvv" name="card_cvv" class="form-input" inputmode="numeric"
+                               maxlength="3" placeholder="123">
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0;">
+                    🔒 Karta ma'lumotlari saqlanmaydi — faqat oxirgi 4 ta raqam qayd etiladi.
+                </p>
+            </div>
+
+            <!-- Bank o'tkazmasi maydonlari -->
+            <div id="transfer-fields" style="display: none; background-color: #1a1e27; border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 15px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="transfer-bank">Bank nomi <span style="color:#ff5252;">*</span></label>
+                    <input type="text" id="transfer-bank" name="transfer_bank" class="form-input"
+                           placeholder="Masalan: Kapitalbank, UzCard, Humo">
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 8px 0 0 0;">
+                    Buyurtma tasdiqlangach, operator siz bilan bog'lanib rekvizitlarni yuboradi.
+                </p>
+            </div>
+
             <input type="hidden" name="total_amount" id="total-amount-input" value="{{ total_price|floatformat:0 }}">
             <button type="submit" class="btn-buy" style="max-width: 250px; padding: 14px 28px; font-size: 15px; font-weight: 700;">Buyurtma berish</button>
         </form>
@@ -309,10 +366,10 @@
             var lat = parseFloat(latInput.value) || 41.311081;
             var lng = parseFloat(lngInput.value) || 69.240562;
 
-            var map = L.map('checkout-map').setView({ z: 12, lat: lat, lng: lng }, 13);
-            L.tileLayer('https://a.basemaps.cartocdn.com/light_all/12/0/0.png', {
-                maxZoom: 19,
-                attribution: 'Cartosian Maps'
+            var map = L.map('checkout-map').setView([lat, lng], 13);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 16,
+                attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
             }).addTo(map);
 
             var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
@@ -385,8 +442,41 @@
             if (form) form.submit();
         }
 
+        // ===== TO'LOV USULI: KARTA / O'TKAZMA MAYDONLARINI KO'RSATISH =====
+        function togglePaymentFields() {
+            var method = document.querySelector('input[name="payment_method"]:checked').value;
+            var cardFields = document.getElementById('card-fields');
+            var transferFields = document.getElementById('transfer-fields');
+
+            cardFields.style.display = (method === 'card') ? 'block' : 'none';
+            transferFields.style.display = (method === 'transfer') ? 'block' : 'none';
+
+            // Majburiy maydonlarni faqat kerakli usulda yoqish
+            ['card-number', 'card-holder', 'card-expiry', 'card-cvv'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.required = (method === 'card');
+            });
+            var bank = document.getElementById('transfer-bank');
+            if (bank) bank.required = (method === 'transfer');
+        }
+
+        function formatCardNumber(input) {
+            var digits = input.value.replace(/\D/g, '').slice(0, 16);
+            input.value = digits.replace(/(.{4})/g, '$1 ').trim();
+        }
+
+        function formatExpiry(input) {
+            var digits = input.value.replace(/\D/g, '').slice(0, 4);
+            if (digits.length >= 3) {
+                input.value = digits.slice(0, 2) + '/' + digits.slice(2);
+            } else {
+                input.value = digits;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             initCheckoutMap();
+            togglePaymentFields();
         });
 
         function closePaymentModal() {

@@ -247,6 +247,20 @@ class Order(BaseCreatedModel):
 
     delivery_method = models.CharField(max_length=20, choices=DeliveryMethod.choices, default=DeliveryMethod.PICKUP, verbose_name="Yetkazib berish usuli")
 
+    class PaymentMethod(models.TextChoices):
+        CASH = 'cash', 'Naqd pul'
+        CARD = 'card', 'Karta orqali'
+        TRANSFER = 'transfer', 'Bank o\'tkazmasi'
+
+    payment_method = models.CharField(
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH,
+        verbose_name="To'lov usuli"
+    )
+    # Xavfsizlik uchun to'liq karta raqami saqlanmaydi — faqat oxirgi 4 ta raqam
+    card_last4 = models.CharField(max_length=4, blank=True, verbose_name="Karta oxirgi 4 raqami")
+    card_holder = models.CharField(max_length=255, blank=True, verbose_name="Karta egasi")
+    transfer_bank = models.CharField(max_length=255, blank=True, verbose_name="Bank nomi (o'tkazma)")
+
     @property
     def items_price(self):
         return sum(item.total_price for item in self.items.all())

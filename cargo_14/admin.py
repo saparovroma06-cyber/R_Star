@@ -119,8 +119,8 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['user', 'full_name', 'phone', 'status', 'formatted_total_price', 'created_at']
-    list_filter = ['status']
+    list_display = ['user', 'full_name', 'phone', 'status', 'payment_method', 'formatted_total_price', 'created_at']
+    list_filter = ['status', 'payment_method']
     search_fields = ['user__username', 'full_name', 'phone', 'address']
     inlines = [OrderItemInline]
     readonly_fields = ['latitude', 'longitude']

@@ -624,17 +624,15 @@ def checkout_view(request):
         user_profile.longitude = checkout_data.get('longitude') or user_profile.longitude
         user_profile.save()
 
-        # --- Имитация платежной логики ---
-        payment_status_message = ""
-
-        if user_profile.has_saved_payment_method:
-            payment_status_message = "To'lov usuli tasdiqlandi (saqlangan karta orqali)."
-        else:
-            user_profile.has_saved_payment_method = True
-            user_profile.save()
-            payment_status_message = "Yangi to'lov usuli qo'shildi (imitatsiya)."
-            messages.info(request, "To'lov usuli muvaffaqiyatli 'qo'shildi'. Keyingi saf undan foydalanishingiz mumkin.")
-        # --- Конец имитации платежной логики ---
+        # To'lov usuli: karta/transfer tanlansa karta ma'lumotlari majburiy (formada tekshirilgan)
+        payment_method = checkout_data['payment_method']
+        card_number = (checkout_data.get('card_number') or '').replace(' ', '')
+        card_last4 = card_number[-4:] if len(card_number) >= 4 else ''
+        payment_status_message = {
+            'cash': "Naqd pul — buyurtma yetkazilganda to'lanadi.",
+            'card': f"Karta orqali to'lov qabul qilindi (**** **** **** {card_last4}).",
+            'transfer': f"Bank o'tkazmasi orqali to'lov qabul qilindi ({checkout_data.get('transfer_bank') or 'Bank'}).",
+        }.get(payment_method, "To'lov usuli tanlanmadi.")
 
         try:
             with transaction.atomic():
@@ -649,6 +647,10 @@ def checkout_view(request):
                     shipping_cost=15000 if delivery_method == 'delivery' else 0,
                     promocode=promocode_obj,
                     promocode_sale=promocode_discount,
+                    payment_method=payment_method,
+                    card_last4=card_last4 if payment_method == 'card' else '',
+                    card_holder=checkout_data.get('card_holder') or '' if payment_method == 'card' else '',
+                    transfer_bank=checkout_data.get('transfer_bank') or '' if payment_method == 'transfer' else '',
                 )
 
                 for item in cart_items:
@@ -673,7 +675,10 @@ def checkout_view(request):
                 f"<b>Xarita:</b> https://www.openstreetmap.org/?mlat={order.latitude}&mlon={order.longitude}#map=16/{order.latitude}/{order.longitude}\n"
                 f"<b>Umumiy narx:</b> {order.total_price} UZS\n"
                 f"<b>Yetkazib berish:</b> {order.get_delivery_method_display()}\n"
-                f"<b>Promokod:</b> {order.promocode.name if order.promocode else 'Yo\'q'}{f' ({order.promocode_sale}%)' if order.promocode_sale else ''}\n"
+                f"<b>To'lov usuli:</b> {order.get_payment_method_display()}\n"
+                + (f"<b>Karta:</b> **** **** **** {order.card_last4} ({order.card_holder})\n" if order.payment_method == 'card' else '')
+                + (f"<b>Bank:</b> {order.transfer_bank}\n" if order.payment_method == 'transfer' else '')
+                + f"<b>Promokod:</b> {order.promocode.name if order.promocode else 'Yo\'q'}{f' ({order.promocode_sale}%)' if order.promocode_sale else ''}\n"
                 f"<b>To'lov holati:</b> {payment_status_message}\n\n"
                 f"<b>Mahsulotlar:</b>\n{order_items_details}\n\n"
                 f"<b>Admin panel:</b> http://127.0.0.1:8000/admin/cargo_14/order/{order.id}/change/"

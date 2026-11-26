@@ -155,12 +155,88 @@ class CheckoutForm(forms.Form):
     latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
     longitude = forms.FloatField(required=False, widget=forms.HiddenInput())
 
+    PAYMENT_CHOICES = [
+        ('cash', '💵 Naqd pul'),
+        ('card', '💳 Karta orqali'),
+        ('transfer', '🏦 Bank o\'tkazmasi'),
+    ]
+
+    payment_method = forms.ChoiceField(
+        choices=PAYMENT_CHOICES,
+        required=True,
+        widget=forms.RadioSelect(attrs={'class': 'payment-radio'}),
+        label="To'lov usuli *",
+    )
+    card_number = forms.CharField(
+        max_length=19, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '8600 1234 5678 9012', 'inputmode': 'numeric'}),
+        label="Karta raqami",
+    )
+    card_holder = forms.CharField(
+        max_length=255, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'SARADOR KARIMOV'}),
+        label="Karta egasi",
+    )
+    card_expiry = forms.CharField(
+        max_length=5, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'MM/YY', 'inputmode': 'numeric'}),
+        label="Muddati",
+    )
+    card_cvv = forms.CharField(
+        max_length=3, required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'CVV', 'inputmode': 'numeric'}),
+        label="CVV",
+    )
+    transfer_bank = forms.CharField(
+        max_length=255, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Masalan: Kapitalbank'}),
+        label="Bank nomi",
+    )
+
     def clean_phone(self):
         phone = self.cleaned_data.get('phone', '').strip()
         digits = [c for c in phone if c.isdigit()]
         if len(digits) < 9:
             raise forms.ValidationError("Telefon raqamini to'liq kiriting (kamida 9 ta raqam).")
         return phone
+
+    @staticmethod
+    def _luhn_ok(number):
+        digits = [int(d) for d in number if d.isdigit()]
+        if len(digits) < 12:
+            return False
+        checksum = 0
+        for i, d in enumerate(reversed(digits)):
+            if i % 2 == 1:
+                d *= 2
+                if d > 9:
+                    d -= 9
+            checksum += d
+        return checksum % 10 == 0
+
+    def clean(self):
+        cleaned = super().clean()
+        method = cleaned.get('payment_method')
+
+        if method == 'card':
+            number = (cleaned.get('card_number') or '').replace(' ', '')
+            if not number:
+                self.add_error('card_number', "Karta raqamini kiriting.")
+            elif not self._luhn_ok(number):
+                self.add_error('card_number', "Karta raqami noto'g'ri. Raqamni tekshiring.")
+            if not (cleaned.get('card_holder') or '').strip():
+                self.add_error('card_holder', "Karta egasining ism-familiyasini kiriting.")
+            expiry = (cleaned.get('card_expiry') or '').strip()
+            if not expiry:
+                self.add_error('card_expiry', "Kartaning muddatini kiriting (MM/YY).")
+            if not (cleaned.get('card_cvv') or '').strip():
+                self.add_error('card_cvv', "CVV kodni kiriting.")
+
+        elif method == 'transfer':
+            if not (cleaned.get('transfer_bank') or '').strip():
+                self.add_error('transfer_bank', "Bank nomini kiriting.")
+
+        return cleaned
 
 from allauth.socialaccount.forms import SignupForm as SocialSignupFormBase
 
