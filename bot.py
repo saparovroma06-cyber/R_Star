@@ -35,6 +35,44 @@ async def user_info_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_info_message = await get_user_info_message(username)
     await update.message.reply_html(user_info_message)
 
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Отправляет статистику сайта."""
+    stats_message = await get_site_statistics_message()
+    await update.message.reply_html(stats_message)
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Отправляет список доступных команд."""
+    help_text = (
+        "🤖 <b>Cargo-14 bot buyruqlari:</b>\n\n"
+        "/start — Botni ishga tushirish\n"
+        "/stats — Sayt statistikasi\n"
+        "/userinfo <username> — Foydalanuvchi ma'lumotlari\n"
+        "/help — Yordam\n"
+        "/randomorder — Random buyurtma yuborish (demo)"
+    )
+    await update.message.reply_html(help_text)
+
+async def random_order_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Bir martalik random demo buyurtma yuboradi."""
+    from cargo_14.telegram_utils import send_random_order_notification
+    ok = await asyncio.to_thread(send_random_order_notification)
+    if ok:
+        await update.message.reply_text("✅ Random demo buyurtma yuborildi.")
+    else:
+        await update.message.reply_text("❌ Xatolik: xabar yuborilmadi (TELEGRAM_BOT_TOKEN/CHAT_ID tekshiring).")
+
+# --- Фоновая задача: случайные заказы ---
+
+RANDOM_ORDER_INTERVAL = 20  # секунд между случайными заказами
+
+async def random_order_job(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """JobQueue callback: отправляет один случайный демо-заказ."""
+    from cargo_14.telegram_utils import send_random_order_notification
+    try:
+        await asyncio.to_thread(send_random_order_notification)
+    except Exception as e:
+        print(f"Random order error: {e}")
+
 def main() -> None:
     """Запускает бота."""
     if not TELEGRAM_BOT_TOKEN:
@@ -54,6 +92,14 @@ def main() -> None:
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("userinfo", user_info_command))
+    application.add_handler(CommandHandler("randomorder", random_order_command))
+
+    # Запускаем фоновую задачу случайных заказов
+    application.job_queue.run_repeating(
+        random_order_job,
+        interval=RANDOM_ORDER_INTERVAL,
+        first=RANDOM_ORDER_INTERVAL,
+    )
 
     # Запускаем бота
     print("Bot is starting polling...")

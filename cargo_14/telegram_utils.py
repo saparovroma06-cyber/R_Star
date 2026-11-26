@@ -1,4 +1,5 @@
 import os
+import random
 import requests
 from django.contrib.auth import get_user_model # Для получения модели User
 from .models import Product, Order, OrderItem # Импортируем нужные модели
@@ -89,3 +90,82 @@ def get_user_info_message(username):
         return f"Foydalanuvchi '{username}' topilmadi."
     except Exception as e:
         return f"Foydalanuvchi ma'lumotlarini olishda xatolik yuz berdi: {e}"
+
+
+# --- Рандомные демо-заказы для Telegram ---
+
+RANDOM_NAMES = [
+    'Sardor Karimov', 'Aziza Rustamova', 'Javohir Aliyev', 'Malika Yusupova',
+    'Bekzod Tursunov', 'Nilufar Qodirova', 'Otabek Ismoilov', 'Zarina Nazarova',
+    'Shoxrux Rahimov', 'Dilnoza Sultonova', 'Islom Xudoyorov', 'Sevara Oripova',
+]
+
+RANDOM_PHONES = [
+    '+998 90 123 45 67', '+998 91 234 56 78', '+998 93 345 67 89',
+    '+998 94 456 78 90', '+998 97 567 89 01', '+998 99 678 90 12',
+]
+
+RANDOM_DISTRICTS = [
+    'Toshkent, Chilonzor tumani, 9-kvartal',
+    'Toshkent, Yunusobod tumani, 4-mavze',
+    'Toshkent, Mirzo Ulug\'bek tumani, 2-kvartal',
+    'Toshkent, Sergeli tumani, Yangi Sergeli',
+    'Toshkent, Yashnobod tumani, 1-mavze',
+    'Toshkent, Bekobod tumani, Do\'stlik ko\'chasi',
+]
+
+RANDOM_BANKS = ['Kapitalbank', 'Ipak Yo\'li Banki', 'Hamkorbank', 'Asakabank', 'TBC Bank']
+
+
+def send_random_order_notification():
+    """Случайный демо-заказ отправляется в Telegram-чат."""
+    products = list(Product.objects.filter(is_active=True)[:8])
+    if not products:
+        return False
+
+    picked = random.sample(products, min(random.randint(1, 3), len(products)))
+    name = random.choice(RANDOM_NAMES)
+    phone = random.choice(RANDOM_PHONES)
+    address = random.choice(RANDOM_DISTRICTS)
+    payment_method, payment_label = random.choice([
+        ('cash', 'Naqd pul'),
+        ('card', 'Karta orqali'),
+        ('transfer', 'Bank o\'tkazmasi'),
+    ])
+    delivery_method, delivery_label = random.choice([
+        ('pickup', 'O\'zim olib ketaman'),
+        ('delivery', 'Kuryer orqali'),
+    ])
+
+    items_lines = []
+    total = 0
+    for p in picked:
+        qty = random.randint(1, 3)
+        subtotal = p.sale_price * qty
+        total += subtotal
+        items_lines.append(f"• {p.name} — {qty} dona × {int(subtotal / qty):,} UZS = {int(subtotal):,} UZS")
+
+    if delivery_method == 'delivery':
+        total += 15000
+
+    order_id = random.randint(10000, 99999)
+
+    payment_extra = ''
+    if payment_method == 'card':
+        payment_extra = f"\n<b>Karta:</b> **** **** **** {random.randint(1000, 9999)}"
+    elif payment_method == 'transfer':
+        payment_extra = f"\n<b>Bank:</b> {random.choice(RANDOM_BANKS)}"
+
+    message = (
+        f"🛒 <b>Yangi buyurtma (demo)!</b>\n\n"
+        f"<b>Buyurtma ID:</b> #{order_id}\n"
+        f"<b>Mijoz:</b> {name}\n"
+        f"<b>Telefon:</b> {phone}\n"
+        f"<b>Manzil:</b> {address}\n"
+        f"<b>Yetkazib berish:</b> {delivery_label}\n"
+        f"<b>To'lov usuli:</b> {payment_label}{payment_extra}\n\n"
+        f"<b>Mahsulotlar:</b>\n" + "\n".join(items_lines) + "\n\n"
+        f"<b>Jami:</b> {int(total):,} UZS"
+    )
+
+    return send_telegram_notification(message)
